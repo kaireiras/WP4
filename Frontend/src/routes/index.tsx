@@ -7,9 +7,16 @@ function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground font-sans flex flex-col justify-center items-center p-6 md:p-12">
       <div className="max-w-2xl w-full text-center space-y-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 border border-primary-200 text-primary-700 text-small-semibold">
-          <Sparkles className="w-4 h-4 text-primary-600" />
-          <span>PLMD · Deteksi Keramaian</span>
+        <div className="flex flex-col items-center gap-3">
+          <img
+            src="/logo-ugm.svg"
+            alt="Logo UGM"
+            className="w-16 h-16 object-contain drop-shadow-xs"
+          />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 border border-primary-200 text-primary-700 text-small-semibold">
+            <Sparkles className="w-4 h-4 text-primary-600" />
+            <span>PLMD · Deteksi Keramaian</span>
+          </div>
         </div>
 
         <h1 className="heading-h2 text-neutral-n900">
