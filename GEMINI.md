@@ -10,3 +10,10 @@
      - Detail node & path geometri: `https://api.figma.com/v1/files/<file_key>/nodes?ids=<node_id>&geometry=paths`
      - Render gambar/SVG: `https://api.figma.com/v1/images/<file_key>?ids=<node_id>&format=png`
   5. Buat kode HTML, CSS, atau aset SVG secara presisi sesuai dengan data desain yang didapatkan dari API.
+
+## Post-Changes Workflows & Verifikasi Kode
+
+- Setiap kali ada penambahan atau perubahan berkas/kode oleh AI:
+  1. Jalankan `pnpm fix` (misal `pnpm --prefix Frontend fix`) untuk memformat kode secara otomatis dan menerapkan auto-fix linting ESLint & Prettier agar kode rapi.
+  2. Jalankan `tsc` (misal `pnpm --prefix Frontend exec tsc --noEmit`) untuk memastikan tidak ada error tipe data TypeScript.
+  3. Pastikan seluruh berkas yang dimodifikasi dalam kondisi bersih tanpa error sebelum mengakhiri respons kepada user.

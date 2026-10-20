@@ -1,11 +1,14 @@
 import * as React from 'react'
+import { Link, useLocation } from '@tanstack/react-router'
 import { cn } from '#/lib/utils'
 
 export type NavItemId = 'dashboard' | 'grafik' | 'alert' | 'model'
+export type NavRoutePath = '/dashboard' | '/grafik' | '/alert' | '/model'
 
 export interface NavItem {
   id: NavItemId
   label: string
+  href: NavRoutePath
   icon: React.ComponentType<{ className?: string }>
   badge?: string | number
 }
@@ -142,16 +145,21 @@ function DefaultAvatarSvg() {
   )
 }
 
-const defaultNavItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: HomeNavIcon },
-  { id: 'grafik', label: 'Grafik', icon: ChartLineNavIcon },
-  { id: 'alert', label: 'Alert', icon: ExclamationMarkNavIcon },
-  { id: 'model', label: 'Model', icon: GraphNavIcon },
+export const defaultNavItems: NavItem[] = [
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    href: '/dashboard',
+    icon: HomeNavIcon,
+  },
+  { id: 'grafik', label: 'Grafik', href: '/grafik', icon: ChartLineNavIcon },
+  { id: 'alert', label: 'Alert', href: '/alert', icon: ExclamationMarkNavIcon },
+  { id: 'model', label: 'Model', href: '/model', icon: GraphNavIcon },
 ]
 
 export function Sidebar({
   isOpen = true,
-  current = 'dashboard',
+  current,
   onSelect,
   onLogout,
   userName = 'Fauzan Trisuladana',
@@ -160,6 +168,12 @@ export function Sidebar({
   className,
   ...props
 }: SidebarProps) {
+  const location = useLocation()
+  const activeId =
+    current ??
+    defaultNavItems.find((item) => location.pathname.startsWith(item.href))
+      ?.id ??
+    'dashboard'
   return (
     <aside
       className={cn(
@@ -170,9 +184,10 @@ export function Sidebar({
       {...props}
     >
       {/* Top Header with UGM Logo (Figma Frame 13: 31:933 / 36:139) */}
-      <div
+      <Link
+        to="/dashboard"
         className={cn(
-          'flex items-center shrink-0',
+          'flex items-center shrink-0 cursor-pointer no-underline',
           isOpen
             ? 'w-full gap-5 min-h-[54px]'
             : 'w-[50px] h-[52px] justify-center',
@@ -188,7 +203,7 @@ export function Sidebar({
             Aplikasi Pendeteksi Keramaian
           </h2>
         )}
-      </div>
+      </Link>
 
       {/* Navigation Items (Figma Nav: 31:892 / 36:142) */}
       <nav
@@ -200,16 +215,16 @@ export function Sidebar({
       >
         {defaultNavItems.map((item) => {
           const Icon = item.icon
-          const isActive = current === item.id
+          const isActive = activeId === item.id
 
           return (
-            <button
+            <Link
               key={item.id}
-              type="button"
+              to={item.href}
               onClick={() => onSelect?.(item.id)}
               title={!isOpen ? item.label : undefined}
               className={cn(
-                'h-[50px] px-4 py-2.5 rounded-[10px] flex items-center justify-center transition-all cursor-pointer border',
+                'h-[50px] px-4 py-2.5 rounded-[10px] flex items-center justify-center transition-all cursor-pointer border no-underline',
                 isOpen ? 'w-full gap-[15px]' : 'w-[55px]',
                 isActive
                   ? 'bg-primary-800 border-neutral-n200 text-white'
@@ -235,7 +250,7 @@ export function Sidebar({
                   {item.label}
                 </span>
               )}
-            </button>
+            </Link>
           )
         })}
       </nav>
