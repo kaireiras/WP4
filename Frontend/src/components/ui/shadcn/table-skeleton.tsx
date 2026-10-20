@@ -5,11 +5,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./table";
+} from './table'
 
 interface TableSkeletonProps {
-  columns: number;
-  rows?: number;
+  columns: number
+  rows?: number
 }
 
 export function TableSkeleton({ columns, rows = 5 }: TableSkeletonProps) {
@@ -28,7 +28,7 @@ export function TableSkeleton({ columns, rows = 5 }: TableSkeletonProps) {
         <TableBody>
           {Array.from({ length: rows }).map((_, rowIdx) => (
             <TableRow key={rowIdx} className="border-slate-200">
-              {Array.from({ length: columns }).map((_, colIdx) => (
+              {Array.from({ length: columns }).map((__, colIdx) => (
                 <TableCell key={colIdx} className="py-3">
                   <div className="h-4 w-full rounded bg-slate-100 animate-pulse" />
                 </TableCell>
@@ -38,5 +38,5 @@ export function TableSkeleton({ columns, rows = 5 }: TableSkeletonProps) {
         </TableBody>
       </Table>
     </div>
-  );
+  )
 }

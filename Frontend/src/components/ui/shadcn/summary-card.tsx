@@ -1,15 +1,15 @@
-import { Card, CardContent } from "./card";
+import { Card, CardContent } from './card'
 
 interface SummaryItem {
-  label: string;
-  value: string;
-  valueColor?: string;
+  label: string
+  value: string
+  valueColor?: string
 }
 
 interface SummaryCardProps {
-  title: string;
-  items: Array<SummaryItem>;
-  isLoading?: boolean;
+  title: string
+  items: Array<SummaryItem>
+  isLoading?: boolean
 }
 
 export function SummaryCard({ title, items, isLoading }: SummaryCardProps) {
@@ -28,7 +28,7 @@ export function SummaryCard({ title, items, isLoading }: SummaryCardProps) {
           </div>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -42,7 +42,7 @@ export function SummaryCard({ title, items, isLoading }: SummaryCardProps) {
             <div key={index} className="flex justify-between items-center">
               <span className="text-xs text-slate-300">{item.label}</span>
               <span
-                className={`text-xs font-semibold ${item.valueColor ?? "text-white"}`}
+                className={`text-xs font-semibold ${item.valueColor ?? 'text-white'}`}
               >
                 {item.value}
               </span>
@@ -51,5 +51,5 @@ export function SummaryCard({ title, items, isLoading }: SummaryCardProps) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
