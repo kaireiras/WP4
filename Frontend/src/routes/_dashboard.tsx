@@ -16,7 +16,7 @@ function DashboardLayout() {
     defaultNavItems[0]
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-neutral-n20 font-sans antialiased text-neutral-n900">
+    <div className="flex h-screen w-screen overflow-hidden bg-neutral-n20/60 dark:bg-neutral-n900 font-sans antialiased text-neutral-n900">
       {/* Persistent Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
@@ -41,7 +41,7 @@ function DashboardLayout() {
         />
 
         {/* Scrollable Page Body */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">
+        <main className="flex flex-1 flex-col gap-4 p-4 overflow-x-hidden">
           <Outlet />
         </main>
       </div>
