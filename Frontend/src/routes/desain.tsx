@@ -501,10 +501,8 @@ function DesainPage() {
           <div className="border border-border rounded-xl overflow-hidden shadow-xs">
             <Header
               title="Dashboards"
-              breadcrumbs={['Main', 'Monitoring', 'Lantai 2']}
               connectionState="synced"
-              onRefresh={() => alert('Data refreshed!')}
-              userName="Admin DTEDI"
+              onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
             />
           </div>
         </div>
@@ -522,24 +520,24 @@ function DesainPage() {
                 )
               </h3>
               <p className="text-tiny-normal text-muted-foreground">
-                Tersedia 4 level kepadatan (Crowded, High, Medium, Low) dengan
-                variasi ukuran dan dot indicator.
+                Tersedia 4 level kepadatan sesuai Figma Node 74:1616 (Crowded,
+                High, Medium, Low).
               </p>
             </div>
 
             <div className="space-y-3 pt-2">
               <div className="flex flex-wrap items-center gap-3">
-                <StatusLevel status="crowded" size="lg" showDot />
-                <StatusLevel status="high" size="lg" showDot />
-                <StatusLevel status="medium" size="lg" showDot />
-                <StatusLevel status="low" size="lg" showDot />
+                <StatusLevel status="crowded" />
+                <StatusLevel status="high" />
+                <StatusLevel status="medium" />
+                <StatusLevel status="low" />
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <StatusLevel status="crowded" size="md" />
-                <StatusLevel status="high" size="md" />
-                <StatusLevel status="medium" size="md" />
-                <StatusLevel status="low" size="md" />
+                <StatusLevel status="crowded" size="lg" />
+                <StatusLevel status="high" size="lg" />
+                <StatusLevel status="medium" size="lg" />
+                <StatusLevel status="low" size="lg" />
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
@@ -601,7 +599,7 @@ function DesainPage() {
         {/* 2.4 MetricsGrid & Sidebar Showcase */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Sidebar Live Preview */}
-          <div className="lg:col-span-4 bg-card border border-border rounded-xl p-5 space-y-4 shadow-xs">
+          <div className="lg:col-span-5 bg-card border border-border rounded-xl p-5 space-y-4 shadow-xs">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-regular-bold text-neutral-n900">
@@ -612,8 +610,7 @@ function DesainPage() {
                   )
                 </h3>
                 <p className="text-tiny-normal text-muted-foreground">
-                  Status:{' '}
-                  {sidebarOpen ? 'Open (Expanded)' : 'Close (Collapsed)'}
+                  Status: {sidebarOpen ? 'Open (355px)' : 'Close (95px)'}
                 </p>
               </div>
               <button
@@ -625,20 +622,20 @@ function DesainPage() {
               </button>
             </div>
 
-            <div className="h-[460px] border border-neutral-n30 rounded-lg overflow-hidden flex bg-neutral-n10">
+            <div className="min-h-[560px] border border-neutral-n30 rounded-lg overflow-x-auto flex justify-center bg-neutral-n20/50 p-2">
               <Sidebar
                 isOpen={sidebarOpen}
                 current={activeNav}
                 onSelect={(id) => setActiveNav(id)}
                 onToggle={() => setSidebarOpen((prev) => !prev)}
                 onLogout={() => alert('Logout clicked!')}
-                className="h-full border-r-0"
+                className="h-auto min-h-[540px] rounded-md shadow-xs"
               />
             </div>
           </div>
 
           {/* MetricsGrid Live Preview */}
-          <div className="lg:col-span-8 bg-card border border-border rounded-xl p-5 space-y-4 shadow-xs flex flex-col justify-between">
+          <div className="lg:col-span-7 bg-card border border-border rounded-xl p-5 space-y-4 shadow-xs flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between">
                 <h3 className="text-regular-bold text-neutral-n900">

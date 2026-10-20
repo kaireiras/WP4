@@ -5,25 +5,29 @@ export type StatusBadgeType = 'active' | 'acknowledge' | 'acknowledged'
 
 export interface StatusBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   status: StatusBadgeType
-  size?: 'sm' | 'md'
+  size?: 'sm' | 'md' | 'lg'
 }
 
 const statusVariants: Record<
   'active' | 'acknowledge',
-  { bg: string; text: string; border: string; label: string }
+  { bg: string; text: string; label: string }
 > = {
   active: {
     bg: 'bg-destructive-5',
     text: 'text-destructive-50',
-    border: 'border-destructive-20',
     label: 'Active',
   },
   acknowledge: {
-    bg: 'bg-neutral-n30',
+    bg: 'bg-neutral-n50',
     text: 'text-neutral-n500',
-    border: 'border-neutral-n40',
     label: 'Acknowledged',
   },
+}
+
+const sizeClasses = {
+  sm: 'px-[6.52px] py-[3.26px] text-[9.78px] leading-[13.04px] tracking-[-0.05px] font-semibold gap-[3.26px]',
+  md: 'px-[6.52px] py-[3.26px] text-[9.78px] leading-[13.04px] tracking-[-0.05px] font-semibold gap-[3.26px]',
+  lg: 'px-3 py-1 text-tiny-semibold gap-1.5',
 }
 
 export function StatusBadge({
@@ -42,13 +46,10 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center justify-center font-sans border font-semibold select-none rounded-md',
+        'inline-flex items-center justify-center rounded-full font-sans transition-colors select-none',
         variant.bg,
         variant.text,
-        variant.border,
-        size === 'sm'
-          ? 'text-tiny-semibold px-2 py-0.5'
-          : 'text-small-semibold px-2.5 py-1',
+        sizeClasses[size],
         className,
       )}
       {...props}

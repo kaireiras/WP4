@@ -45,7 +45,7 @@ export function ConnectionStatus({
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-tiny-semibold md:text-small-semibold shadow-xs select-none transition-all',
+        'inline-flex items-center gap-2 px-4 py-2 rounded-full text-[12px] leading-[15px] font-normal select-none transition-all',
         bgClass,
         className,
       )}

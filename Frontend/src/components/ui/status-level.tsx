@@ -11,42 +11,34 @@ export interface StatusLevelProps extends React.HTMLAttributes<HTMLSpanElement> 
 
 const statusLevelVariants: Record<
   StatusLevelType,
-  { bg: string; text: string; border: string; dot: string; label: string }
+  { bg: string; dot: string; label: string }
 > = {
   crowded: {
     bg: 'bg-destructive-5',
-    text: 'text-destructive-50',
-    border: 'border-destructive-20',
     dot: 'bg-destructive-50',
     label: 'Crowded',
   },
   high: {
     bg: 'bg-warning-5',
-    text: 'text-warning-50',
-    border: 'border-warning-20',
     dot: 'bg-warning-50',
     label: 'High',
   },
   medium: {
     bg: 'bg-yellow-50',
-    text: 'text-tertiary-700',
-    border: 'border-yellow-200',
-    dot: 'bg-tertiary-500',
+    dot: 'bg-yellow-500',
     label: 'Medium',
   },
   low: {
     bg: 'bg-success-5',
-    text: 'text-success-60',
-    border: 'border-success-20',
     dot: 'bg-success-50',
     label: 'Low',
   },
 }
 
 const sizeClasses = {
-  sm: 'text-tiny-semibold px-2 py-0.5 rounded-sm gap-1',
-  md: 'text-small-semibold px-2.5 py-1 rounded-md gap-1.5',
-  lg: 'text-regular-semibold px-3 py-1.5 rounded-lg gap-2',
+  sm: 'px-[6.52px] py-[3.26px] text-[9.78px] leading-[13.04px] tracking-[-0.05px] font-semibold gap-[3.26px]',
+  md: 'px-[6.52px] py-[3.26px] text-[9.78px] leading-[13.04px] tracking-[-0.05px] font-semibold gap-[3.26px]',
+  lg: 'px-3 py-1 text-tiny-semibold gap-1.5',
 }
 
 export function StatusLevel({
@@ -62,10 +54,8 @@ export function StatusLevel({
   return (
     <span
       className={cn(
-        'inline-flex items-center justify-center font-sans border transition-colors select-none',
+        'inline-flex items-center justify-center rounded-full font-sans text-neutral-n900 transition-colors select-none',
         variant.bg,
-        variant.text,
-        variant.border,
         sizeClasses[size],
         className,
       )}

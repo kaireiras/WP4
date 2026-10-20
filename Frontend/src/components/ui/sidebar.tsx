@@ -1,13 +1,4 @@
 import * as React from 'react'
-import {
-  AlertTriangle,
-  BarChart3,
-  Cpu,
-  LayoutDashboard,
-  LogOut,
-  PanelLeftClose,
-  PanelLeftOpen,
-} from 'lucide-react'
 import { cn } from '#/lib/utils'
 
 export type NavItemId = 'dashboard' | 'grafik' | 'alert' | 'model'
@@ -25,130 +16,281 @@ export interface SidebarProps extends React.HTMLAttributes<HTMLElement> {
   onSelect?: (id: NavItemId) => void
   onToggle?: () => void
   onLogout?: () => void
+  userName?: string
+  userEmail?: string
+  userAvatar?: string
+}
+
+function HomeNavIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 30 30"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn('w-[30px] h-[30px] shrink-0', className)}
+      aria-hidden="true"
+    >
+      <g transform="translate(4.8131 4.0394)">
+        <path
+          d="M2.12906 20.2684L6.62219 20.2684L6.62219 13.4606C6.62219 13.1602 6.72458 12.9077 6.92938 12.7031C7.13396 12.4983 7.38646 12.3959 7.68687 12.3959L12.6869 12.3959C12.9873 12.3959 13.2398 12.4983 13.4444 12.7031C13.6492 12.9077 13.7516 13.1602 13.7516 13.4606L13.7516 20.2684L18.2447 20.2684L18.2447 8.18062L10.1869 2.13656L2.12906 8.18062L2.12906 20.2684ZM0 20.2684L0 8.17813C0 7.84229 0.074375 7.52427 0.223125 7.22406C0.371667 6.92365 0.579687 6.67437 0.847188 6.47625L8.905 0.427187C9.27646 0.142395 9.70208 0 10.1819 0C10.6617 0 11.0906 0.142395 11.4688 0.427187L19.5266 6.47625C19.7964 6.67437 20.0063 6.92365 20.1562 7.22406C20.3062 7.52427 20.3812 7.84229 20.3812 8.17813L20.3812 20.2684C20.3812 20.8591 20.1733 21.3616 19.7575 21.7759C19.3417 22.1903 18.8374 22.3975 18.2447 22.3975L12.7691 22.3975C12.4686 22.3975 12.2161 22.2952 12.0116 22.0906C11.807 21.886 11.7047 21.6334 11.7047 21.3328L11.7047 14.4428L8.66906 14.4428L8.66906 21.3328C8.66906 21.6334 8.56677 21.886 8.36219 22.0906C8.1576 22.2952 7.9051 22.3975 7.60469 22.3975L2.12906 22.3975C1.53844 22.3975 1.03594 22.1903 0.621562 21.7759C0.207187 21.3616 0 20.8591 0 20.2684Z"
+          fill="currentColor"
+        />
+      </g>
+    </svg>
+  )
+}
+
+function ChartLineNavIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 30 30"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn('w-[30px] h-[30px] shrink-0', className)}
+      aria-hidden="true"
+    >
+      <g transform="translate(2.8125 4.6875)">
+        <path
+          d="M24.375 19.6875C24.375 19.9361 24.2762 20.1746 24.1004 20.3504C23.9246 20.5262 23.6861 20.625 23.4375 20.625L0.9375 20.625C0.68886 20.625 0.450403 20.5262 0.274587 20.3504C0.098772 20.1746 0 19.9361 0 19.6875L0 0.9375C0 0.68886 0.098772 0.450403 0.274587 0.274588C0.450403 0.0987722 0.68886 0 0.9375 0C1.18614 0 1.4246 0.0987722 1.60041 0.274588C1.77623 0.450403 1.875 0.68886 1.875 0.9375L1.875 11.9965L7.81992 6.79688C7.98169 6.65526 8.18722 6.57356 8.40207 6.56545C8.61691 6.55734 8.82802 6.62333 9 6.75234L15.8918 11.9215L22.8199 5.85938C22.9108 5.76945 23.019 5.69906 23.1381 5.65251C23.2571 5.60597 23.3844 5.58426 23.5122 5.58872C23.6399 5.59317 23.7654 5.62371 23.8809 5.67843C23.9964 5.73316 24.0995 5.81094 24.1838 5.90697C24.2682 6.003 24.332 6.11527 24.3714 6.23687C24.4107 6.35848 24.4248 6.48685 24.4128 6.61409C24.4007 6.74134 24.3628 6.86478 24.3013 6.97682C24.2397 7.08887 24.156 7.18715 24.0551 7.26562L16.5551 13.8281C16.3933 13.9697 16.1878 14.0514 15.9729 14.0595C15.7581 14.0677 15.547 14.0017 15.375 13.8727L8.4832 8.70586L1.875 14.4879L1.875 18.75L23.4375 18.75C23.6861 18.75 23.9246 18.8488 24.1004 19.0246C24.2762 19.2004 24.375 19.4389 24.375 19.6875Z"
+          fill="currentColor"
+        />
+      </g>
+    </svg>
+  )
+}
+
+function ExclamationMarkNavIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 30 30"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn('w-[30px] h-[30px] shrink-0', className)}
+      aria-hidden="true"
+    >
+      <g transform="translate(13.125 4.6875)">
+        <path
+          d="M3.75 18.75C3.75 19.1208 3.64003 19.4834 3.43401 19.7917C3.22798 20.1 2.93514 20.3404 2.59253 20.4823C2.24992 20.6242 1.87292 20.6613 1.50921 20.589C1.14549 20.5166 0.8114 20.338 0.549176 20.0758C0.286953 19.8136 0.108376 19.4795 0.0360284 19.1158C-0.0363188 18.7521 0.000812402 18.3751 0.142727 18.0325C0.284641 17.6899 0.524965 17.397 0.833307 17.191C1.14165 16.985 1.50416 16.875 1.875 16.875C2.37228 16.875 2.8492 17.0725 3.20083 17.4242C3.55246 17.7758 3.75 18.2527 3.75 18.75ZM1.875 14.0625C2.12364 14.0625 2.3621 13.9637 2.53791 13.7879C2.71373 13.6121 2.8125 13.3736 2.8125 13.125L2.8125 0.9375C2.8125 0.68886 2.71373 0.450403 2.53791 0.274588C2.3621 0.0987722 2.12364 0 1.875 0C1.62636 0 1.3879 0.0987722 1.21209 0.274588C1.03627 0.450403 0.937501 0.68886 0.937501 0.9375L0.937501 13.125C0.937501 13.3736 1.03627 13.6121 1.21209 13.7879C1.3879 13.9637 1.62636 14.0625 1.875 14.0625Z"
+          fill="currentColor"
+        />
+      </g>
+    </svg>
+  )
+}
+
+function GraphNavIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 30 30"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn('w-[30px] h-[30px] shrink-0', className)}
+      aria-hidden="true"
+    >
+      <g transform="translate(2.7948 2.8125)">
+        <path
+          d="M20.6427 15C19.8141 14.9995 19.0088 15.275 18.354 15.7828L15.6458 13.6734C15.8503 13.2047 15.9556 12.6988 15.9552 12.1875C15.9552 12.1008 15.9552 12.014 15.9458 11.9285L17.4962 11.4117C17.9867 12.1682 18.7334 12.7227 19.5994 12.9735C20.4653 13.2244 21.3927 13.1548 22.2116 12.7776C23.0305 12.4004 23.6861 11.7408 24.0583 10.9196C24.4305 10.0984 24.4943 9.17061 24.2382 8.30617C23.982 7.44173 23.423 6.69851 22.6635 6.21265C21.9041 5.72679 20.9949 5.53083 20.1027 5.66065C19.2106 5.79047 18.395 6.23739 17.8055 6.91954C17.2159 7.60168 16.8919 8.47339 16.8927 9.37499C16.8927 9.46171 16.8927 9.54842 16.9021 9.63397L15.3517 10.1508C15.0118 9.62534 14.5459 9.19331 13.9963 8.89406C13.4467 8.59482 12.831 8.43785 12.2052 8.43749C11.9983 8.43792 11.7918 8.45516 11.5876 8.48905L10.7861 6.67967C11.4782 6.12666 11.9522 5.34645 12.124 4.47735C12.2959 3.60824 12.1544 2.70636 11.7248 1.93156C11.2952 1.15677 10.6052 0.559084 9.77702 0.244453C8.94884 -0.0701776 8.03601 -0.0814365 7.20033 0.212671C6.36464 0.506779 5.66007 1.08726 5.21149 1.85123C4.7629 2.6152 4.59929 3.51331 4.74963 4.38639C4.89998 5.25947 5.35458 6.05113 6.03286 6.62105C6.71114 7.19097 7.56929 7.50234 8.45521 7.49999C8.66213 7.49956 8.86867 7.48231 9.07279 7.44842L9.87436 9.25311C9.19462 9.7911 8.72284 10.5485 8.53966 11.3958C8.35647 12.2431 8.47326 13.1277 8.87006 13.8984L5.85717 16.575C5.09894 16.0638 4.18033 15.8468 3.2735 15.9644C2.36667 16.0821 1.5339 16.5265 0.931271 17.2143C0.328643 17.902 -0.00246364 18.786 1.38026e-05 19.7004C0.00249124 20.6148 0.338383 21.497 0.944728 22.1815C1.55107 22.8659 2.38624 23.3058 3.29369 23.4186C4.20115 23.5313 5.11857 23.3093 5.87402 22.794C6.62946 22.2788 7.17105 21.5057 7.39728 20.6197C7.6235 19.7337 7.51882 18.7956 7.10287 17.9812L10.1158 15.3047C10.7681 15.7439 11.5423 15.9663 12.3283 15.9402C13.1143 15.9141 13.8721 15.6409 14.4939 15.1594L17.2021 17.2687C16.9983 17.736 16.893 18.2402 16.8927 18.75C16.8927 19.4917 17.1126 20.2167 17.5247 20.8334C17.9368 21.4501 18.5224 21.9307 19.2077 22.2145C19.8929 22.4984 20.6469 22.5726 21.3743 22.4279C22.1017 22.2832 22.7699 21.9261 23.2944 21.4016C23.8188 20.8772 24.176 20.209 24.3207 19.4816C24.4654 18.7541 24.3911 18.0001 24.1073 17.3149C23.8234 16.6297 23.3428 16.044 22.7261 15.632C22.1094 15.2199 21.3844 15 20.6427 15ZM20.6427 7.49999C21.0136 7.49999 21.3761 7.60995 21.6844 7.81598C21.9928 8.02201 22.2331 8.31484 22.375 8.65745C22.5169 9.00007 22.554 9.37707 22.4817 9.74078C22.4093 10.1045 22.2308 10.4386 21.9685 10.7008C21.7063 10.963 21.3722 11.1416 21.0085 11.214C20.6448 11.2863 20.2678 11.2492 19.9252 11.1073C19.5826 10.9653 19.2897 10.725 19.0837 10.4167C18.8777 10.1083 18.7677 9.74583 18.7677 9.37499C18.7677 8.8777 18.9653 8.40079 19.3169 8.04916C19.6685 7.69753 20.1454 7.49999 20.6427 7.49999ZM6.58021 3.74999C6.58021 3.37915 6.69018 3.01663 6.89621 2.70829C7.10224 2.39995 7.39507 2.15963 7.73768 2.01771C8.08029 1.8758 8.45729 1.83867 8.82101 1.91101C9.18472 1.98336 9.51882 2.16194 9.78104 2.42416C10.0433 2.68638 10.2218 3.02048 10.2942 3.38419C10.3665 3.74791 10.3294 4.12491 10.1875 4.46752C10.0456 4.81013 9.80525 5.10296 9.49691 5.30899C9.18857 5.51502 8.82605 5.62499 8.45521 5.62499C7.95793 5.62499 7.48102 5.42744 7.12939 5.07581C6.77776 4.72418 6.58021 4.24727 6.58021 3.74999ZM3.76771 21.5625C3.39687 21.5625 3.03436 21.4525 2.72602 21.2465C2.41768 21.0405 2.17735 20.7476 2.03544 20.405C1.89353 20.0624 1.85639 19.6854 1.92874 19.3217C2.00109 18.958 2.17967 18.6239 2.44189 18.3617C2.70411 18.0994 3.03821 17.9209 3.40192 17.8485C3.76563 17.7762 4.14263 17.8133 4.48525 17.9552C4.82786 18.0971 5.12069 18.3375 5.32672 18.6458C5.53275 18.9541 5.64271 19.3166 5.64271 19.6875C5.64271 20.1848 5.44517 20.6617 5.09354 21.0133C4.74191 21.3649 4.265 21.5625 3.76771 21.5625ZM10.3302 12.1875C10.3302 11.8166 10.4402 11.4541 10.6462 11.1458C10.8522 10.8375 11.1451 10.5971 11.4877 10.4552C11.8303 10.3133 12.2073 10.2762 12.571 10.3485C12.9347 10.4209 13.2688 10.5994 13.531 10.8617C13.7933 11.1239 13.9718 11.458 14.0442 11.8217C14.1165 12.1854 14.0794 12.5624 13.9375 12.905C13.7956 13.2476 13.5553 13.5405 13.2469 13.7465C12.9386 13.9525 12.5761 14.0625 12.2052 14.0625C11.7079 14.0625 11.231 13.8649 10.8794 13.5133C10.5278 13.1617 10.3302 12.6848 10.3302 12.1875ZM20.6427 20.625C20.2719 20.625 19.9094 20.515 19.601 20.309C19.2927 20.103 19.0524 19.8101 18.9104 19.4675C18.7685 19.1249 18.7314 18.7479 18.8037 18.3842C18.8761 18.0205 19.0547 17.6864 19.3169 17.4242C19.5791 17.1619 19.9132 16.9834 20.2769 16.911C20.6406 16.8387 21.0176 16.8758 21.3602 17.0177C21.7029 17.1596 21.9957 17.4 22.2017 17.7083C22.4077 18.0166 22.5177 18.3791 22.5177 18.75C22.5177 19.2473 22.3202 19.7242 21.9685 20.0758C21.6169 20.4274 21.14 20.625 20.6427 20.625Z"
+          fill="currentColor"
+        />
+      </g>
+    </svg>
+  )
+}
+
+function LogoutFigmaIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn('w-6 h-6 shrink-0', className)}
+      aria-hidden="true"
+    >
+      <g transform="translate(2.8505 2.8445)">
+        <path
+          d="M1.70325 18.305C1.24325 18.305 0.844417 18.1361 0.50675 17.7983C0.168917 17.4606 0 17.0617 0 16.6017L0 1.70925C0 1.24758 0.168917 0.847332 0.50675 0.508499C0.844417 0.169499 1.24325 0 1.70325 0L8.30875 0C8.54908 0 8.75108 0.0834154 8.91475 0.250249C9.07842 0.417249 9.16025 0.621333 9.16025 0.8625C9.16025 1.10383 9.07842 1.30533 8.91475 1.467C8.75108 1.6285 8.54908 1.70925 8.30875 1.70925L1.70325 1.70925L1.70325 16.6017L8.30875 16.6017C8.54908 16.6017 8.75108 16.684 8.91475 16.8485C9.07842 17.013 9.16025 17.2161 9.16025 17.4577C9.16025 17.6994 9.07842 17.901 8.91475 18.0625C8.75108 18.2242 8.54908 18.305 8.30875 18.305L1.70325 18.305ZM15.0412 10.0072L6.96525 10.0072C6.72492 10.0072 6.52292 9.92492 6.35925 9.76025C6.19558 9.59575 6.11375 9.39267 6.11375 9.151C6.11375 8.9095 6.19558 8.70792 6.35925 8.54625C6.52292 8.38458 6.72492 8.30375 6.96525 8.30375L14.9912 8.30375L13.068 6.3805C12.898 6.20967 12.8172 6.00958 12.8255 5.78025C12.8338 5.55075 12.923 5.352 13.093 5.184C13.2628 5.01217 13.4653 4.92725 13.7003 4.92925C13.9351 4.93125 14.1388 5.01717 14.3115 5.187L17.7083 8.58375C17.8741 8.75508 17.957 8.95433 17.957 9.1815C17.957 9.40867 17.8741 9.60725 17.7083 9.77725L14.3365 13.149C14.1698 13.3188 13.9718 13.4006 13.7423 13.3942C13.5126 13.3879 13.3096 13.2998 13.1332 13.13C12.9697 12.96 12.8869 12.7572 12.8847 12.5215C12.8826 12.2857 12.9687 12.0823 13.143 11.9115L15.0412 10.0072Z"
+          fill="currentColor"
+        />
+      </g>
+    </svg>
+  )
+}
+
+function DefaultAvatarSvg() {
+  return (
+    <svg
+      viewBox="0 0 44 44"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-full h-full"
+      aria-hidden="true"
+    >
+      <circle cx="22" cy="22" r="22" fill="#D6E4FF" />
+      <circle cx="22" cy="17" r="7.5" fill="#F2C6A0" />
+      <path
+        d="M14.5 15.5C14.5 11.3579 17.8579 8 22 8C26.1421 8 29.5 11.3579 29.5 15.5C29.5 16.5 29 17.5 28 17C26.5 14.5 24 13.5 21 13.5C18 13.5 16 14.8 15 17C14.6 16.8 14.5 16.2 14.5 15.5Z"
+        fill="#2E2E2E"
+      />
+      <path
+        d="M9 40C9 32.8203 14.8203 27 22 27C29.1797 27 35 32.8203 35 40V44H9V40Z"
+        fill="#1166D8"
+      />
+    </svg>
+  )
 }
 
 const defaultNavItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'grafik', label: 'Grafik', icon: BarChart3 },
-  { id: 'alert', label: 'Alert', icon: AlertTriangle, badge: '5' },
-  { id: 'model', label: 'Model', icon: Cpu },
+  { id: 'dashboard', label: 'Dashboard', icon: HomeNavIcon },
+  { id: 'grafik', label: 'Grafik', icon: ChartLineNavIcon },
+  { id: 'alert', label: 'Alert', icon: ExclamationMarkNavIcon },
+  { id: 'model', label: 'Model', icon: GraphNavIcon },
 ]
 
 export function Sidebar({
   isOpen = true,
   current = 'dashboard',
   onSelect,
-  onToggle,
   onLogout,
+  userName = 'Fauzan Trisuladana',
+  userEmail = 'fauzantrisuladana@gmail.com',
+  userAvatar,
   className,
   ...props
 }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'h-screen bg-neutral-n10 dark:bg-neutral-n800 border-r border-border flex flex-col justify-between p-4 font-sans transition-all duration-300 ease-in-out shrink-0 select-none',
-        isOpen ? 'w-64' : 'w-20',
+        'h-screen bg-neutral-n10 dark:bg-neutral-n800 flex flex-col items-center justify-between gap-[30px] font-sans transition-all duration-300 ease-in-out shrink-0 select-none',
+        isOpen ? 'w-[355px] p-[30px]' : 'w-[95px] px-5 py-[30px]',
         className,
       )}
       {...props}
     >
-      {/* Top Header with UGM Logo */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <img
-            src="/logo-ugm.svg"
-            alt="Logo UGM"
-            className="w-10 h-10 object-contain shrink-0"
-          />
+      {/* Top Header with UGM Logo (Figma Frame 13: 31:933 / 36:139) */}
+      <div
+        className={cn(
+          'flex items-center shrink-0',
+          isOpen
+            ? 'w-full gap-5 min-h-[54px]'
+            : 'w-[50px] h-[52px] justify-center',
+        )}
+      >
+        <img
+          src="/logo-ugm.svg"
+          alt="Logo UGM"
+          className="w-[50px] h-[52px] object-contain shrink-0"
+        />
+        {isOpen && (
+          <h2 className="flex-1 min-w-0 font-sans font-extrabold text-[21.89px] leading-[27px] text-primary-600">
+            Aplikasi Pendeteksi Keramaian
+          </h2>
+        )}
+      </div>
+
+      {/* Navigation Items (Figma Nav: 31:892 / 36:142) */}
+      <nav
+        className={cn(
+          'flex-1 flex flex-col gap-5',
+          isOpen ? 'w-full' : 'w-[55px]',
+        )}
+        aria-label="Sidebar Navigation"
+      >
+        {defaultNavItems.map((item) => {
+          const Icon = item.icon
+          const isActive = current === item.id
+
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onSelect?.(item.id)}
+              title={!isOpen ? item.label : undefined}
+              className={cn(
+                'h-[50px] px-4 py-2.5 rounded-[10px] flex items-center justify-center transition-all cursor-pointer border',
+                isOpen ? 'w-full gap-[15px]' : 'w-[55px]',
+                isActive
+                  ? 'bg-primary-800 border-neutral-n200 text-white'
+                  : 'bg-neutral-n0 dark:bg-neutral-n700 border-transparent text-primary-950 dark:text-neutral-n100 hover:bg-primary-50/60 dark:hover:bg-neutral-n600',
+              )}
+            >
+              <Icon
+                className={cn(
+                  isActive
+                    ? 'text-white'
+                    : 'text-primary-950 dark:text-neutral-n100',
+                )}
+              />
+              {isOpen && (
+                <span
+                  className={cn(
+                    'flex-1 text-left heading-tagline truncate',
+                    isActive
+                      ? 'text-white'
+                      : 'text-primary-950 dark:text-neutral-n100',
+                  )}
+                >
+                  {item.label}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </nav>
+
+      {/* Bottom section: User Profile & Log out (Figma Frame 39962 / Frame 39961) */}
+      <div
+        className={cn(
+          'flex flex-col items-center justify-center gap-5 shrink-0',
+          isOpen ? 'w-full' : 'w-[55px]',
+        )}
+      >
+        {/* User Profile Row (Figma Frame 39958) */}
+        <div
+          className={cn(
+            'h-11 flex items-center',
+            isOpen ? 'w-full gap-2' : 'w-[55px] justify-center',
+          )}
+          title={!isOpen ? `${userName} (${userEmail})` : undefined}
+        >
+          <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 bg-neutral-n30">
+            {userAvatar ? (
+              <img
+                src={userAvatar}
+                alt={userName}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <DefaultAvatarSvg />
+            )}
+          </div>
           {isOpen && (
-            <div className="min-w-0 flex-1">
-              <h2 className="text-small-bold text-primary-600 leading-tight">
-                Aplikasi Pendeteksi Keramaian
-              </h2>
-              <span className="text-tiny-normal text-muted-foreground">
-                PLMD · DTEDI SV UGM
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              <span className="heading-tagline text-neutral-n900 dark:text-neutral-n10 truncate leading-[22px]">
+                {userName}
+              </span>
+              <span className="heading-tagline text-neutral-n300 dark:text-neutral-n400 truncate leading-[22px]">
+                {userEmail}
               </span>
             </div>
           )}
         </div>
 
-        {/* Navigation Items */}
-        <nav className="space-y-1.5" aria-label="Sidebar Navigation">
-          {defaultNavItems.map((item) => {
-            const Icon = item.icon
-            const isActive = current === item.id
-
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onSelect?.(item.id)}
-                title={!isOpen ? item.label : undefined}
-                className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-small-medium transition-all cursor-pointer',
-                  isActive
-                    ? 'bg-primary-800 text-white shadow-xs font-semibold'
-                    : 'text-neutral-n600 dark:text-neutral-n300 hover:bg-neutral-n20 dark:hover:bg-neutral-n700',
-                )}
-              >
-                <Icon
-                  className={cn(
-                    'w-5 h-5 shrink-0',
-                    isActive ? 'text-white' : 'text-neutral-n500',
-                  )}
-                />
-                {isOpen && (
-                  <span className="flex-1 text-left truncate">
-                    {item.label}
-                  </span>
-                )}
-                {isOpen && item.badge && (
-                  <span
-                    className={cn(
-                      'px-1.5 py-0.5 rounded-full text-tiny-bold shrink-0',
-                      isActive
-                        ? 'bg-destructive-50 text-white'
-                        : 'bg-destructive-10 text-destructive-70',
-                    )}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </nav>
-      </div>
-
-      {/* Bottom section: Toggle & Logout */}
-      <div className="space-y-2 pt-4 border-t border-border">
-        {onToggle && (
-          <button
-            type="button"
-            onClick={onToggle}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-small-medium text-muted-foreground hover:bg-neutral-n20 dark:hover:bg-neutral-n700 transition-colors cursor-pointer"
-          >
-            {isOpen ? (
-              <>
-                <PanelLeftClose className="w-5 h-5 shrink-0" />
-                <span className="truncate">Tutup Menu</span>
-              </>
-            ) : (
-              <PanelLeftOpen className="w-5 h-5 shrink-0 mx-auto" />
-            )}
-          </button>
-        )}
-
+        {/* Log out Button (Figma Button: 36:209 / 31:945) */}
         <button
           type="button"
           onClick={onLogout}
+          title={!isOpen ? 'Log out' : undefined}
           className={cn(
-            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-small-medium bg-destructive-60 hover:bg-destructive-70 text-white transition-colors cursor-pointer shadow-xs',
-            !isOpen && 'justify-center px-0',
+            'px-6 py-2.5 rounded-[5px] bg-destructive-60 hover:bg-destructive-70 border border-destructive-50 text-white flex items-center justify-center transition-colors cursor-pointer',
+            isOpen ? 'w-full h-[46px] gap-3' : 'w-[55px] h-11',
           )}
         >
-          <LogOut className="w-5 h-5 shrink-0" />
-          {isOpen && <span className="truncate">Keluar</span>}
+          <LogoutFigmaIcon className="text-white" />
+          {isOpen && (
+            <span className="text-regular-medium text-white truncate">
+              Log out
+            </span>
+          )}
         </button>
       </div>
     </aside>
