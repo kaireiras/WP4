@@ -10,7 +10,10 @@ export interface NavItem {
   badge?: string | number
 }
 
-export interface SidebarProps extends React.HTMLAttributes<HTMLElement> {
+export interface SidebarProps extends Omit<
+  React.HTMLAttributes<HTMLElement>,
+  'onSelect'
+> {
   isOpen?: boolean
   current?: NavItemId
   onSelect?: (id: NavItemId) => void

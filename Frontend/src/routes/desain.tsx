@@ -14,7 +14,7 @@ import {
   StatusBadge,
   StatusLevel,
 } from '#/components/ui'
-import type { NavItemId, StatusLevelType } from '#/components/ui'
+import type { NavItemId } from '#/components/ui'
 
 export const Route = createFileRoute('/desain')({ component: DesainPage })
 
@@ -305,7 +305,10 @@ function DesainPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans p-6 md:p-12 space-y-16">
+    <div
+      suppressHydrationWarning
+      className="min-h-screen bg-background text-foreground font-sans p-6 md:p-12 space-y-16"
+    >
       {/* Top Breadcrumb & Header */}
       <header className="border-b border-border pb-8">
         <Link
