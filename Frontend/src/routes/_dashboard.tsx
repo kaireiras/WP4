@@ -44,9 +44,9 @@ function DashboardLayout() {
         className="shrink-0"
       />
 
-      {/* Main Content Area */}
-      <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden">
-        {/* Persistent Header */}
+      {/* Main Content Area (Scrollable container sehingga header ikut ter-scroll bersama konten) */}
+      <div className="flex flex-col flex-1 min-w-0 h-full overflow-y-auto overflow-x-hidden">
+        {/* Header (Ikut ter-scroll saat halaman di-scroll) */}
         <Header
           title={activeNav.label}
           breadcrumbs={[activeNav.label]}
@@ -57,8 +57,8 @@ function DashboardLayout() {
           className="shrink-0"
         />
 
-        {/* Scrollable Page Body */}
-        <main className="flex flex-1 flex-col gap-4 p-4 overflow-x-hidden">
+        {/* Page Body */}
+        <main className="flex flex-1 flex-col gap-4 p-4 shrink-0">
           <Outlet />
         </main>
       </div>
