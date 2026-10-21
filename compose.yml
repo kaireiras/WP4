@@ -1,0 +1,24 @@
+services:
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: crowd-detection-frontend
+    restart: always
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - path: ./Frontend/.env
+        required: false
+    networks:
+      - pmld-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+networks:
+  pmld-net:
+    external: true
