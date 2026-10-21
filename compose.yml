@@ -10,10 +10,12 @@ services:
     env_file:
       - path: ./Frontend/.env
         required: false
+    environment:
+      - NITRO_PORT=3000
     networks:
       - pmld-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      test: ["CMD", "curl", "-f", "-s", "http://127.0.0.1:3000/"]
       interval: 10s
       timeout: 5s
       retries: 3
