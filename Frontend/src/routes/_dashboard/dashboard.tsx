@@ -40,14 +40,12 @@ function DashboardPage() {
       />
 
       {/* 3. Interactive Floor Plan (Figma 13:69 -> Denah) */}
-      <div className="w-full bg-white dark:bg-neutral-n800 border border-neutral-n40 dark:border-neutral-n700 rounded-2xl p-4 md:p-6 shadow-sm">
-        <Denah
-          selectedRoom={selectedRoomId ?? undefined}
-          onSelectRoom={handleSelectRoom}
-          roomStatuses={DASHBOARD_ROOM_STATUSES}
-          showKosong={true}
-        />
-      </div>
+      <Denah
+        selectedRoom={selectedRoomId ?? undefined}
+        onSelectRoom={handleSelectRoom}
+        roomStatuses={DASHBOARD_ROOM_STATUSES}
+        showKosong={true}
+      />
 
       {/* 4. Centered Dialog Popup displaying MetricsGrid when a room is clicked */}
       <RoomDetailDialog

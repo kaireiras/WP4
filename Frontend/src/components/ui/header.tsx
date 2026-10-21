@@ -126,7 +126,7 @@ export function Header({
   return (
     <header
       className={cn(
-        'w-full h-[76px] px-5 py-2.5 bg-neutral-n0 dark:bg-neutral-n800 border-b-2 border-neutral-n40 dark:border-neutral-n700 flex items-center justify-between font-sans transition-colors',
+        'w-full h-[76px] px-3 sm:px-5 py-2.5 bg-neutral-n0 dark:bg-neutral-n800 border-b-2 border-neutral-n40 dark:border-neutral-n700 flex items-center justify-between font-sans transition-colors',
         className,
       )}
       {...props}
@@ -138,7 +138,7 @@ export function Header({
             type="button"
             onClick={onToggleSidebar}
             aria-label="Toggle Sidebar"
-            className="w-14 h-14 p-4 rounded-[20px] flex items-center justify-center text-neutral-n600 dark:text-neutral-n200 hover:bg-neutral-n20 dark:hover:bg-neutral-n700 transition-colors cursor-pointer"
+            className="w-12 h-12 sm:w-14 sm:h-14 p-3 sm:p-4 rounded-[20px] flex items-center justify-center text-neutral-n600 dark:text-neutral-n200 hover:bg-neutral-n20 dark:hover:bg-neutral-n700 transition-colors cursor-pointer"
           >
             <SidebarDuotoneIcon />
           </button>
@@ -173,13 +173,15 @@ export function Header({
       </div>
 
       {/* Right section: Terhubung + Bell + Avatar-Caret (Figma 22:361) */}
-      <div className="flex items-center justify-end gap-5 h-14">
+      <div className="flex items-center justify-end gap-2 sm:gap-5 h-14">
         {/* Connection status pill (Figma 22:442) */}
-        <ConnectionStatus
-          state={connectionState}
-          label={connectionLabel}
-          lastSyncTime={lastSyncTime}
-        />
+        <div className="flex items-center">
+          <ConnectionStatus
+            state={connectionState}
+            label={connectionLabel}
+            lastSyncTime={lastSyncTime}
+          />
+        </div>
 
         {/* Group: Notification Bell button (Figma 22:363 -> I22:363;10922:14268) */}
         <div className="flex items-center justify-end gap-2 rounded-lg">
@@ -187,7 +189,7 @@ export function Header({
             type="button"
             onClick={onNotificationClick}
             aria-label="Notifications"
-            className="w-14 h-14 p-4 rounded-[20px] flex items-center justify-center text-neutral-n600 dark:text-neutral-n200 hover:bg-neutral-n20 dark:hover:bg-neutral-n700 transition-colors cursor-pointer"
+            className="w-12 h-12 sm:w-14 sm:h-14 p-3 sm:p-4 rounded-[20px] flex items-center justify-center text-neutral-n600 dark:text-neutral-n200 hover:bg-neutral-n20 dark:hover:bg-neutral-n700 transition-colors cursor-pointer"
           >
             <BellDuotoneIcon />
           </button>

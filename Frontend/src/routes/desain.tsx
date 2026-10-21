@@ -581,7 +581,7 @@ function DesainPage() {
                 </div>
               </div>
 
-              <div className="space-y-1.5 pt-2 border-t border-border">
+              <div className="space-y-2 pt-2 border-t border-border">
                 <span className="text-tiny-bold text-muted-foreground uppercase tracking-wider">
                   Terhubung (
                   <code className="font-mono text-primary text-tiny-medium">
@@ -589,10 +589,52 @@ function DesainPage() {
                   </code>
                   )
                 </span>
-                <div className="flex flex-wrap items-center gap-3">
-                  <ConnectionStatus state="connected" label="Connected" />
-                  <ConnectionStatus state="synced" lastSyncTime="12:09:15" />
-                  <ConnectionStatus state="disconnected" label="Disconnected" />
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-xs text-muted-foreground block mb-1.5 font-medium">
+                      Pill Version (Desktop):
+                    </span>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <ConnectionStatus state="connected" label="Connected" />
+                      <ConnectionStatus
+                        state="synced"
+                        lastSyncTime="12:09:15"
+                      />
+                      <ConnectionStatus
+                        state="disconnected"
+                        label="Disconnected"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-xs text-muted-foreground block mb-1.5 font-medium">
+                      Dot Only (Mobile / Compact):
+                    </span>
+                    <div className="flex flex-wrap items-center gap-4 p-2 bg-neutral-n20/60 dark:bg-neutral-n800 rounded-lg w-fit border border-neutral-n40 dark:border-neutral-n700">
+                      <div className="flex items-center gap-2">
+                        <ConnectionStatus state="connected" dotOnly />
+                        <span className="text-xs text-neutral-600 dark:text-neutral-300 font-medium">
+                          Connected
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ConnectionStatus
+                          state="synced"
+                          dotOnly
+                          lastSyncTime="12:09:15"
+                        />
+                        <span className="text-xs text-neutral-600 dark:text-neutral-300 font-medium">
+                          Synced
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ConnectionStatus state="disconnected" dotOnly />
+                        <span className="text-xs text-neutral-600 dark:text-neutral-300 font-medium">
+                          Disconnected
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
