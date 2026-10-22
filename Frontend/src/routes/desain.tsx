@@ -362,6 +362,9 @@ function DesainPage() {
             <img
               src="/logo-ugm.svg"
               alt="Logo UGM"
+              width={96}
+              height={96}
+              style={{ width: '96px', height: '96px', objectFit: 'contain' }}
               className="w-24 h-24 object-contain drop-shadow-xs"
             />
             <div>
@@ -398,6 +401,9 @@ function DesainPage() {
             <img
               src="/logo-ugm.svg"
               alt="Logo UGM Dark"
+              width={96}
+              height={96}
+              style={{ width: '96px', height: '96px', objectFit: 'contain' }}
               className="w-24 h-24 object-contain brightness-110"
             />
             <div>
@@ -426,6 +432,9 @@ function DesainPage() {
               <img
                 src="/logo-ugm.svg"
                 alt="Logo UGM"
+                width={40}
+                height={40}
+                style={{ width: '40px', height: '40px', objectFit: 'contain' }}
                 className="w-10 h-10 object-contain shrink-0"
               />
               <div>

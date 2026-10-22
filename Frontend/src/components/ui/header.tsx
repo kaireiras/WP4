@@ -200,11 +200,28 @@ export function Header({
           className="flex items-center gap-[5px] h-11 cursor-pointer"
           title={userName}
         >
-          <div className="w-11 h-11 rounded-full overflow-hidden shrink-0 bg-neutral-n30">
+          <div
+            className="w-11 h-11 rounded-full overflow-hidden shrink-0 bg-neutral-n30"
+            style={{
+              width: '44px',
+              height: '44px',
+              minWidth: '44px',
+              minHeight: '44px',
+              flexShrink: 0,
+            }}
+          >
             {userAvatar ? (
               <img
                 src={userAvatar}
                 alt={userName}
+                width={44}
+                height={44}
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  objectFit: 'cover',
+                  flexShrink: 0,
+                }}
                 className="w-full h-full object-cover"
               />
             ) : (

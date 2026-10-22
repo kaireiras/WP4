@@ -142,11 +142,30 @@ export function Sidebar({
               : 'md:w-full md:h-11 md:justify-center md:gap-0',
           )}
         >
-          <img
-            src="/logo-ugm.svg"
-            alt="Logo UGM"
-            className="size-11 object-contain shrink-0"
-          />
+          <div
+            className="size-11 shrink-0 flex items-center justify-center overflow-hidden"
+            style={{
+              width: '44px',
+              height: '44px',
+              minWidth: '44px',
+              minHeight: '44px',
+              flexShrink: 0,
+            }}
+          >
+            <img
+              src="/logo-ugm.svg"
+              alt="Logo UGM"
+              width={44}
+              height={44}
+              style={{
+                width: '44px',
+                height: '44px',
+                objectFit: 'contain',
+                flexShrink: 0,
+              }}
+              className="size-11 object-contain shrink-0"
+            />
+          </div>
           <div
             className={cn(
               'flex flex-col justify-center min-w-0 transition-all duration-300 ease-in-out overflow-hidden',
@@ -234,10 +253,27 @@ export function Sidebar({
             )}
             title={!isOpen ? `${userName} (${userEmail})` : undefined}
           >
-            <div className="size-10 rounded-full overflow-hidden shrink-0 bg-neutral-n30 dark:bg-neutral-n700 border border-neutral-n40 dark:border-neutral-n600">
+            <div
+              className="size-10 rounded-full overflow-hidden shrink-0 bg-neutral-n30 dark:bg-neutral-n700 border border-neutral-n40 dark:border-neutral-n600"
+              style={{
+                width: '40px',
+                height: '40px',
+                minWidth: '40px',
+                minHeight: '40px',
+                flexShrink: 0,
+              }}
+            >
               <img
                 src={userAvatar || '/icons/default-avatar.svg'}
                 alt={userName}
+                width={40}
+                height={40}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  objectFit: 'cover',
+                  flexShrink: 0,
+                }}
                 className="w-full h-full object-cover"
               />
             </div>
