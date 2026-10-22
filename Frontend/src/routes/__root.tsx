@@ -9,7 +9,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import { Toaster } from '#/components/ui/shadcn/sonner'
 import { HydrationFixScript } from '#/components/ui/hydration-fix'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
-import appCss from '../styles.css?url'
+import '../styles.css'
 import type { QueryClient } from '@tanstack/react-query'
 
 interface MyRouterContext {
@@ -43,10 +43,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       {
         rel: 'stylesheet',
         href: 'https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap',
-      },
-      {
-        rel: 'stylesheet',
-        href: appCss,
       },
       {
         rel: 'icon',
