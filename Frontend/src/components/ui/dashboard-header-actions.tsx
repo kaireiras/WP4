@@ -48,9 +48,9 @@ export function DashboardHeaderActions({
   const isControlled = controlledSeconds !== undefined
   const seconds = isControlled ? controlledSeconds : internalSeconds
 
-  // Hitung mundur otomatis internal jika tidak di-control dari parent
+  // Hitung mundur otomatis internal jika tidak di-control dari parent dan showCountdown aktif
   React.useEffect(() => {
-    if (isControlled) return
+    if (isControlled || !showCountdown) return
 
     const timer = setInterval(() => {
       setInternalSeconds((prev) => {
@@ -63,14 +63,14 @@ export function DashboardHeaderActions({
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [isControlled, onRefresh, totalSeconds])
+  }, [isControlled, showCountdown, onRefresh, totalSeconds])
 
   // Reset hitung mundur saat data sukses diperbarui
   React.useEffect(() => {
-    if (!isControlled && lastUpdatedAt !== undefined) {
+    if (!isControlled && showCountdown && lastUpdatedAt !== undefined) {
       setInternalSeconds(totalSeconds)
     }
-  }, [isControlled, lastUpdatedAt, totalSeconds])
+  }, [isControlled, showCountdown, lastUpdatedAt, totalSeconds])
 
   const handleRefreshClick = () => {
     if (!isControlled) {

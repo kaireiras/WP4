@@ -29,7 +29,7 @@ function AlertPage() {
   const navigate = useNavigate()
   const { page, per_page, range, from, to } = Route.useSearch()
 
-  // ─── TanStack Query Integration with 30s Auto-Refetch ──────────────────────
+  // ─── TanStack Query Integration ─────────────────────────────────────────────
   const alertsQuery = useQuery({
     queryKey: ['alerts', { page, per_page, range, from, to }],
     queryFn: async () => {
@@ -37,8 +37,6 @@ function AlertPage() {
       await new Promise((resolve) => setTimeout(resolve, 600))
       return DUMMY_ALERTS
     },
-    refetchInterval: 30000,
-    refetchIntervalInBackground: false,
   })
 
   const handlePageChange = (newPage: number) => {
@@ -84,15 +82,15 @@ function AlertPage() {
 
   return (
     <>
-      {/* 1. Page Header with Reusable DashboardHeaderActions (Countdown, Refresh & TimePicker) */}
+      {/* 1. Page Header with Reusable DashboardHeaderActions (Refresh & TimePicker) */}
       <DashboardHeader
         title="Riwayat Crowded"
         subtitle="Lihat riwayat kejadian Crowded dan status penanganannya"
         actions={
           <DashboardHeaderActions
+            showCountdown={false}
             onRefresh={() => alertsQuery.refetch()}
             isRefreshing={alertsQuery.isFetching}
-            lastUpdatedAt={alertsQuery.dataUpdatedAt}
             timeRange={range}
             onTimeRangeChange={handleTimeRangeChange}
           />
