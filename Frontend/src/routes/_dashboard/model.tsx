@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { DashboardHeader } from '#/components/pages/dashboard/dashboard-header'
+import { DashboardHeader } from '#/components/ui/dashboard-header'
 import { ModelOverviewCard, ModelMetricsGrid } from '#/components/pages/model'
 
 export const Route = createFileRoute('/_dashboard/model')({
@@ -8,7 +8,7 @@ export const Route = createFileRoute('/_dashboard/model')({
 
 function ModelPage() {
   return (
-    <div className="space-y-6 pb-6">
+    <>
       {/* 1. Page Header (Figma Main-Header) */}
       <DashboardHeader
         title="Informasi Model"
@@ -20,6 +20,6 @@ function ModelPage() {
 
       {/* 3. Core 6 Metrics Grid (Figma 13:72 Data) */}
       <ModelMetricsGrid />
-    </div>
+    </>
   )
 }

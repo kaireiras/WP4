@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
+import { DashboardHeader } from '#/components/ui/dashboard-header'
 import { Denah, DENAH_ROOMS } from '#/components/ui/denah'
 import {
-  DashboardHeader,
   DashboardAlert,
   RoomDetailDialog,
   DASHBOARD_ROOM_STATUSES,

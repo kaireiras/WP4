@@ -1,3 +1,4 @@
+import { cn } from '#/lib/utils'
 import {
   Table,
   TableBody,
@@ -10,11 +11,21 @@ import {
 interface TableSkeletonProps {
   columns: number
   rows?: number
+  className?: string
 }
 
-export function TableSkeleton({ columns, rows = 5 }: TableSkeletonProps) {
+export function TableSkeleton({
+  columns,
+  rows = 5,
+  className,
+}: TableSkeletonProps) {
   return (
-    <div className="rounded-lg border-2 border-slate-200 bg-white overflow-hidden">
+    <div
+      className={cn(
+        'rounded-lg border-2 border-slate-200 bg-white dark:bg-neutral-n800 dark:border-neutral-n700 overflow-hidden',
+        className,
+      )}
+    >
       <Table>
         <TableHeader>
           <TableRow className="border-slate-200">
