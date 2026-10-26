@@ -54,6 +54,7 @@ function DashboardLayout() {
           connectionState="synced"
           lastSyncTime="12:09:15"
           userName="Fauzan Trisuladana"
+          userEmail="fauzantrisuladana@gmail.com"
           className="shrink-0"
         />
 

@@ -1,7 +1,15 @@
 import * as React from 'react'
+import { Bell, LogOut } from 'lucide-react'
 import { cn } from '#/lib/utils'
 import { ConnectionStatus } from './connection-status'
 import type { ConnectionStateType } from './connection-status'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '#/components/ui/shadcn/dropdown-menu'
 
 export interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   title?: string
@@ -13,7 +21,9 @@ export interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   onRefresh?: () => void
   onNotificationClick?: () => void
   userName?: string
+  userEmail?: string
   userAvatar?: string
+  onLogout?: () => void
 }
 
 function SidebarDuotoneIcon({ className }: { className?: string }) {
@@ -119,7 +129,9 @@ export function Header({
   lastSyncTime,
   onNotificationClick,
   userName = 'Fauzan Trisuladana',
+  userEmail = 'fauzantrisuladana@gmail.com',
   userAvatar,
+  onLogout,
   className,
   ...props
 }: HeaderProps) {
@@ -183,53 +195,110 @@ export function Header({
           />
         </div>
 
-        {/* Group: Notification Bell button (Figma 22:363 -> I22:363;10922:14268) */}
+        {/* Group: Notification Bell button with Dropdown (Figma 22:363) */}
         <div className="flex items-center justify-end gap-2 rounded-lg">
-          <button
-            type="button"
-            onClick={onNotificationClick}
-            aria-label="Notifications"
-            className="w-12 h-12 sm:w-14 sm:h-14 p-3 sm:p-4 rounded-[20px] flex items-center justify-center text-neutral-n600 dark:text-neutral-n200 hover:bg-neutral-n20 dark:hover:bg-neutral-n700 transition-colors cursor-pointer"
-          >
-            <BellDuotoneIcon />
-          </button>
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                onClick={onNotificationClick}
+                aria-label="Notifications"
+                className="w-12 h-12 sm:w-14 sm:h-14 p-3 sm:p-4 rounded-[20px] flex items-center justify-center text-neutral-n600 dark:text-neutral-n200 hover:bg-neutral-n20 dark:hover:bg-neutral-n700 transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary/40 select-none"
+              >
+                <BellDuotoneIcon />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              sideOffset={8}
+              className="w-72 sm:w-80 p-5 bg-white dark:bg-neutral-n800 border border-neutral-n40 dark:border-neutral-n700 shadow-xl rounded-2xl z-50 text-center"
+            >
+              <div className="w-12 h-12 rounded-full bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 flex items-center justify-center mx-auto mb-3">
+                <Bell className="size-5" />
+              </div>
+              <h4 className="text-sm font-semibold text-neutral-n900 dark:text-neutral-n100">
+                Fitur Segera Hadir
+              </h4>
+              <p className="text-xs text-neutral-n500 dark:text-neutral-n400 mt-1.5 leading-relaxed">
+                Pemberitahuan riwayat keramaian dan notifikasi real-time saat
+                ini sedang dalam tahap pengembangan.
+              </p>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        {/* User Avatar + CaretDown (Figma 22:364) */}
-        <div
-          className="flex items-center gap-[5px] h-11 cursor-pointer"
-          title={userName}
-        >
-          <div
-            className="w-11 h-11 rounded-full overflow-hidden shrink-0 bg-neutral-n30"
-            style={{
-              width: '44px',
-              height: '44px',
-              minWidth: '44px',
-              minHeight: '44px',
-              flexShrink: 0,
-            }}
-          >
-            {userAvatar ? (
-              <img
-                src={userAvatar}
-                alt={userName}
-                width={44}
-                height={44}
+        {/* User Avatar + CaretDown with Dropdown (Figma 22:364) */}
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center gap-[5px] h-11 cursor-pointer outline-none rounded-full focus-visible:ring-2 focus-visible:ring-primary/40 select-none group"
+              title={userName}
+              aria-label="Menu Pengguna"
+            >
+              <div
+                className="w-11 h-11 rounded-full overflow-hidden shrink-0 bg-neutral-n30 ring-2 ring-transparent group-hover:ring-primary/20 transition-all"
                 style={{
                   width: '44px',
                   height: '44px',
-                  objectFit: 'cover',
+                  minWidth: '44px',
+                  minHeight: '44px',
                   flexShrink: 0,
                 }}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <DefaultAvatarSvg />
-            )}
-          </div>
-          <CaretDownIcon className="text-neutral-n600 dark:text-neutral-n200" />
-        </div>
+              >
+                {userAvatar ? (
+                  <img
+                    src={userAvatar}
+                    alt={userName}
+                    width={44}
+                    height={44}
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      objectFit: 'cover',
+                      flexShrink: 0,
+                    }}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <DefaultAvatarSvg />
+                )}
+              </div>
+              <CaretDownIcon className="text-neutral-n600 dark:text-neutral-n200 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+            </button>
+          </DropdownMenuTrigger>
+
+          <DropdownMenuContent
+            align="end"
+            sideOffset={8}
+            className="w-64 bg-white dark:bg-neutral-n800 border border-neutral-n40 dark:border-neutral-n700 shadow-xl rounded-2xl p-0 overflow-hidden z-50"
+          >
+            {/* Header: User Info matching screenshot */}
+            <div className="p-4 select-none">
+              <div className="text-sm font-semibold text-neutral-n900 dark:text-neutral-n100 leading-tight">
+                {userName}
+              </div>
+              <div className="text-xs text-neutral-n500 dark:text-neutral-n400 mt-1 truncate">
+                {userEmail}
+              </div>
+            </div>
+
+            {/* Separator */}
+            <DropdownMenuSeparator className="my-0 bg-neutral-n40 dark:bg-neutral-n700" />
+
+            {/* Menu Action: Only Log out (per instruction: "tidak ada tombol profile") */}
+            <div className="p-1.5">
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={onLogout}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 focus:bg-red-50 dark:focus:bg-red-950/40 focus:text-red-600 cursor-pointer select-none transition-colors"
+              >
+                <LogOut className="size-4 shrink-0 text-red-600 dark:text-red-400" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   )
