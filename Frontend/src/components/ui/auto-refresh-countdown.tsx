@@ -13,7 +13,7 @@ export function AutoRefreshCountdown({
   label = 'auto-refresh',
   className,
 }: AutoRefreshCountdownProps) {
-  const radius = 7
+  const radius = 8
   const circumference = 2 * Math.PI * radius
   const progressRatio = Math.max(0, Math.min(1, seconds / totalSeconds))
   const strokeDashoffset = (1 - progressRatio) * circumference
@@ -29,24 +29,24 @@ export function AutoRefreshCountdown({
     >
       {/* Circular Progress Ring matching user design */}
       <svg
-        className="size-[18px] -rotate-90 shrink-0"
-        viewBox="0 0 18 18"
+        className="size-5 -rotate-90 shrink-0"
+        viewBox="0 0 20 20"
         aria-hidden="true"
       >
         <circle
-          cx="9"
-          cy="9"
+          cx="10"
+          cy="10"
           r={radius}
           fill="none"
-          strokeWidth="2.4"
-          className="stroke-slate-200 dark:stroke-neutral-700"
+          strokeWidth="2.5"
+          className="stroke-slate-200/90 dark:stroke-neutral-700"
         />
         <circle
-          cx="9"
-          cy="9"
+          cx="10"
+          cy="10"
           r={radius}
           fill="none"
-          strokeWidth="2.4"
+          strokeWidth="2.5"
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
@@ -55,13 +55,13 @@ export function AutoRefreshCountdown({
       </svg>
 
       {/* Countdown Number */}
-      <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-neutral-200 tabular-nums ml-2">
+      <span className="text-sm font-medium text-slate-700 dark:text-neutral-200 tabular-nums ml-2.5">
         {seconds}s
       </span>
 
       {/* Auto-Refresh Label */}
       {label && (
-        <span className="text-xs font-normal text-slate-400 dark:text-neutral-400 ml-1.5">
+        <span className="text-sm font-normal text-slate-400 dark:text-neutral-400 ml-2">
           {label}
         </span>
       )}

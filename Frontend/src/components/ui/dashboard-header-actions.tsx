@@ -1,8 +1,9 @@
 import * as React from 'react'
-import { RotateCw } from 'lucide-react'
+import { RefreshCw } from 'lucide-react'
 import { AutoRefreshCountdown } from './auto-refresh-countdown'
 import { TimeRangePicker } from './time-range-picker'
 import type { TimeRangeValue } from './time-range-picker'
+import { RoomPicker } from './room-picker'
 import { cn } from '#/lib/utils'
 
 export interface DashboardHeaderActionsProps {
@@ -22,6 +23,12 @@ export interface DashboardHeaderActionsProps {
   onTimeRangeChange?: (value: TimeRangeValue) => void
   /** Apakah menampilkan TimeRangePicker dropdown (default: true) */
   showTimeRange?: boolean
+  /** Ruangan yang sedang dipilih (default: 'all') */
+  selectedRoom?: string
+  /** Callback saat ruangan diubah dari RoomPicker */
+  onRoomChange?: (roomId: string) => void
+  /** Apakah menampilkan RoomPicker dropdown di sebelah kiri tanggal (default: false) */
+  showRoomPicker?: boolean
   /** Apakah menampilkan countdown ring (default: true) */
   showCountdown?: boolean
   /** Label untuk countdown pill (default: 'auto-refresh') */
@@ -39,6 +46,9 @@ export function DashboardHeaderActions({
   timeRange = '1d',
   onTimeRangeChange,
   showTimeRange = true,
+  selectedRoom = 'all',
+  onRoomChange,
+  showRoomPicker = false,
   showCountdown = true,
   countdownLabel = 'auto-refresh',
   className,
@@ -100,20 +110,25 @@ export function DashboardHeaderActions({
         type="button"
         onClick={handleRefreshClick}
         disabled={isRefreshing}
-        className="h-[38px] px-4 bg-[#503cf6] hover:bg-[#4332d9] active:scale-95 text-white rounded-2xl flex items-center gap-2 shadow-sm shadow-[#503cf6]/25 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed font-medium text-xs sm:text-sm select-none"
+        className="h-[38px] px-4 bg-[#503cf6] hover:bg-[#4332d9] active:scale-95 text-white rounded-2xl flex items-center gap-2 shadow-sm shadow-[#503cf6]/25 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed font-medium text-sm select-none"
         title="Muat ulang data sekarang"
         aria-label="Muat ulang data"
       >
-        <RotateCw
+        <RefreshCw
           className={cn(
-            'size-3.5 sm:size-4 shrink-0 transition-transform',
+            'size-4 shrink-0 transition-transform',
             isRefreshing && 'animate-spin',
           )}
         />
         <span>Refresh</span>
       </button>
 
-      {/* 3. Time Range Picker Dropdown */}
+      {/* 3. Room Picker Dropdown (di sebelah kiri dropdown tanggal) */}
+      {showRoomPicker && (
+        <RoomPicker value={selectedRoom} onChange={onRoomChange} />
+      )}
+
+      {/* 4. Time Range Picker Dropdown */}
       {showTimeRange && (
         <TimeRangePicker value={timeRange} onChange={onTimeRangeChange} />
       )}
