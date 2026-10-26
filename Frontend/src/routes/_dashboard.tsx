@@ -1,16 +1,50 @@
-import { createFileRoute, Outlet, useLocation } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  useLocation,
+  useNavigate,
+} from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { Header } from '#/components/ui/header'
 import { Sidebar, defaultNavItems } from '#/components/ui/sidebar'
 
 export const Route = createFileRoute('/_dashboard')({
+  beforeLoad: () => {
+    if (typeof window !== 'undefined') {
+      const auth = localStorage.getItem('auth_status')
+      if (auth !== 'loged in') {
+        throw redirect({
+          to: '/login',
+        })
+      }
+    }
+  },
   component: DashboardLayout,
 })
 
 function DashboardLayout() {
+  const navigate = useNavigate()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const location = useLocation()
+
+  // Proteksi client-side: Jika belum login, redirect ke halaman login
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const auth = localStorage.getItem('auth_status')
+      if (auth !== 'loged in') {
+        navigate({ to: '/login' })
+      }
+    }
+  }, [navigate, location.pathname])
+
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('auth_status')
+    }
+    navigate({ to: '/login' })
+  }
 
   // Otomatis tutup sidebar mobile saat berpindah halaman
   useEffect(() => {
@@ -39,6 +73,7 @@ function DashboardLayout() {
         current={activeNav.id}
         onSelect={() => setIsMobileOpen(false)}
         onToggle={() => setIsSidebarOpen((prev) => !prev)}
+        onLogout={handleLogout}
         userName="Fauzan Trisuladana"
         userEmail="fauzantrisuladana@gmail.com"
         className="shrink-0"
@@ -55,6 +90,7 @@ function DashboardLayout() {
           lastSyncTime="12:09:15"
           userName="Fauzan Trisuladana"
           userEmail="fauzantrisuladana@gmail.com"
+          onLogout={handleLogout}
           className="shrink-0"
         />
 

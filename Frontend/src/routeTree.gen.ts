@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as DesainRouteImport } from './routes/desain'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardAlertRouteImport } from './routes/_dashboard/alert'
 import { Route as DashboardDashboardRouteImport } from './routes/_dashboard/dashboard'
 import { Route as DashboardGrafikRouteImport } from './routes/_dashboard/grafik'
@@ -29,6 +30,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const DesainRoute = DesainRouteImport.update({
   id: '/desain',
   path: '/desain',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardAlertRoute = DashboardAlertRouteImport.update({
@@ -55,6 +61,7 @@ const DashboardModelRoute = DashboardModelRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/desain': typeof DesainRoute
+  '/login': typeof LoginRoute
   '/alert': typeof DashboardAlertRoute
   '/dashboard': typeof DashboardDashboardRoute
   '/grafik': typeof DashboardGrafikRoute
@@ -63,6 +70,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/desain': typeof DesainRoute
+  '/login': typeof LoginRoute
   '/alert': typeof DashboardAlertRoute
   '/dashboard': typeof DashboardDashboardRoute
   '/grafik': typeof DashboardGrafikRoute
@@ -73,6 +81,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_dashboard': typeof DashboardRouteWithChildren
   '/desain': typeof DesainRoute
+  '/login': typeof LoginRoute
   '/_dashboard/alert': typeof DashboardAlertRoute
   '/_dashboard/dashboard': typeof DashboardDashboardRoute
   '/_dashboard/grafik': typeof DashboardGrafikRoute
@@ -80,14 +89,17 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/desain' | '/alert' | '/dashboard' | '/grafik' | '/model'
+  fullPaths:
+    '/' | '/desain' | '/login' | '/alert' | '/dashboard' | '/grafik' | '/model'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/desain' | '/alert' | '/dashboard' | '/grafik' | '/model'
+  to:
+    '/' | '/desain' | '/login' | '/alert' | '/dashboard' | '/grafik' | '/model'
   id:
     | '__root__'
     | '/'
     | '/_dashboard'
     | '/desain'
+    | '/login'
     | '/_dashboard/alert'
     | '/_dashboard/dashboard'
     | '/_dashboard/grafik'
@@ -98,6 +110,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   DesainRoute: typeof DesainRoute
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -121,6 +134,13 @@ declare module '@tanstack/react-router' {
       path: '/desain'
       fullPath: '/desain'
       preLoaderRoute: typeof DesainRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_dashboard/alert': {
@@ -176,6 +196,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRouteWithChildren,
   DesainRoute: DesainRoute,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
