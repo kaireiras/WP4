@@ -12,11 +12,13 @@ export function LoginMobileHeader({ className }: LoginMobileHeaderProps) {
         className,
       )}
     >
-      <img
-        src="/logo-ugm.svg"
-        alt="Logo UGM"
-        className="w-10 h-10 object-contain shrink-0"
-      />
+      <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 p-1">
+        <img
+          src="/logo-ugm.svg"
+          alt="Logo UGM"
+          className="w-full h-full object-contain"
+        />
+      </div>
       <div>
         <h2 className="text-sm font-bold text-white leading-tight">
           Aplikasi Pendeteksi Keramaian
