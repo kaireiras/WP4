@@ -9,16 +9,16 @@ export const Route = createFileRoute('/_dashboard/model')({
 function ModelPage() {
   return (
     <>
-      {/* 1. Page Header (Figma Main-Header) */}
+      {/* Header */}
       <DashboardHeader
         title="Informasi Model"
         subtitle="Lihat informasi model machine learning yang digunakan"
       />
 
-      {/* 2. Hero Overview Card with Model Info, Deployed Date & Quick Specs */}
+      {/* Overview Card */}
       <ModelOverviewCard />
 
-      {/* 3. Core 6 Metrics Grid (Figma 13:72 Data) */}
+      {/* Metrics Grid */}
       <ModelMetricsGrid />
     </>
   )

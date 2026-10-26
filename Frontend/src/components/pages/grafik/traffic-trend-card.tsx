@@ -23,7 +23,7 @@ export function TrafficTrendCard({ data, className }: TrafficTrendCardProps) {
         className,
       )}
     >
-      {/* 1. Header & Legends */}
+      {/* Header & Legends */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-base sm:text-lg font-bold tracking-tight text-neutral-n900 dark:text-neutral-n100">
@@ -34,7 +34,7 @@ export function TrafficTrendCard({ data, className }: TrafficTrendCardProps) {
           </p>
         </div>
 
-        {/* Custom Legend matching Figma Frame 39972 */}
+        {/* Legend */}
         <div className="flex items-center gap-4 text-xs font-semibold text-neutral-n800 dark:text-neutral-n200 self-start sm:self-center">
           <div className="flex items-center gap-2">
             <span className="size-3 rounded-xs bg-[#FF6107] shrink-0" />
@@ -47,7 +47,7 @@ export function TrafficTrendCard({ data, className }: TrafficTrendCardProps) {
         </div>
       </div>
 
-      {/* 2. Area Chart */}
+      {/* Area Chart */}
       <div className="w-full h-64 sm:h-72 -ml-2">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart

@@ -91,7 +91,7 @@ export function MetricsGrid({
       )}
       {...props}
     >
-      {/* Header (Figma I125:1581;128:1260) */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h3 className="font-sans font-bold text-xl text-neutral-n900 dark:text-neutral-n10 tracking-tight">
@@ -144,7 +144,7 @@ export function MetricsGrid({
         </div>
       )}
 
-      {/* Grid of 6 line cards (Figma I125:1581;128:1268) */}
+      {/* Grid of Line Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {metrics.map((m, idx) => (
           <MetricCard
@@ -161,7 +161,7 @@ export function MetricsGrid({
         ))}
       </div>
 
-      {/* Footer / Updated At (Figma I125:1581;128:1325) */}
+      {/* Footer Updated At */}
       <div className="text-tiny-normal text-neutral-n400 dark:text-neutral-n400 text-right pt-0.5">
         {updatedAt}
       </div>

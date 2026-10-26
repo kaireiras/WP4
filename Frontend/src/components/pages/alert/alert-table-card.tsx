@@ -234,7 +234,7 @@ export function AlertTableCard({
         className,
       )}
     >
-      {/* Main Table Content or Skeleton Loading State (tanpa toolbar header) */}
+      {/* Table Content */}
       {isLoading ? (
         <TableSkeleton
           columns={columns.length}
@@ -299,7 +299,7 @@ export function AlertTableCard({
         </div>
       )}
 
-      {/* Footer Pagination (matches Figma node 64:8620) */}
+      {/* Pagination */}
       {!isLoading && (
         <AlertPagination
           currentPage={currentPage}

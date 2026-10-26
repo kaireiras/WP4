@@ -96,7 +96,7 @@ export function DashboardHeaderActions({
         className,
       )}
     >
-      {/* 1. Auto-Refresh Countdown Ring & Label */}
+      {/* Auto-Refresh Countdown */}
       {showCountdown && (
         <AutoRefreshCountdown
           seconds={seconds}
@@ -105,7 +105,7 @@ export function DashboardHeaderActions({
         />
       )}
 
-      {/* 2. Manual Refresh Button */}
+      {/* Manual Refresh Button */}
       <button
         type="button"
         onClick={handleRefreshClick}
@@ -123,12 +123,12 @@ export function DashboardHeaderActions({
         <span>Refresh</span>
       </button>
 
-      {/* 3. Room Picker Dropdown (di sebelah kiri dropdown tanggal) */}
+      {/* Room Picker Dropdown */}
       {showRoomPicker && (
         <RoomPicker value={selectedRoom} onChange={onRoomChange} />
       )}
 
-      {/* 4. Time Range Picker Dropdown */}
+      {/* Time Range Picker Dropdown */}
       {showTimeRange && (
         <TimeRangePicker value={timeRange} onChange={onTimeRangeChange} />
       )}

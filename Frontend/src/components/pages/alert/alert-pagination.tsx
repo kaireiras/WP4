@@ -87,12 +87,12 @@ export function AlertPagination({
         className,
       )}
     >
-      {/* 1. Item Range Summary (e.g. 1-20 of 180 items) */}
+      {/* Item Range Summary */}
       <span className="text-muted-foreground whitespace-nowrap">
         {startItem}-{endItem} of {totalItems} items
       </span>
 
-      {/* 2. Pagination Controls (e.g. < 1 2 3 4 5 >) */}
+      {/* Pagination Controls */}
       <div className="flex items-center gap-1">
         <button
           type="button"
@@ -134,7 +134,7 @@ export function AlertPagination({
         </button>
       </div>
 
-      {/* 3. Per-Page Selector (Figma Node 67:9250: Angka tunggal interaktif + tombol opsi di sampingnya) */}
+      {/* Per-Page Selector */}
       <div className="flex items-center gap-1.5 whitespace-nowrap text-xs">
         <span className="text-neutral-n700 dark:text-neutral-n300 font-medium">
           Per-Page:

@@ -143,7 +143,7 @@ export function Header({
       )}
       {...props}
     >
-      {/* Left section: Icon-Breadcrumb (Figma 22:358) */}
+      {/* Breadcrumb */}
       <div className="flex items-center h-14">
         <div className="flex items-center gap-2 rounded-lg">
           <button
@@ -184,9 +184,9 @@ export function Header({
         </div>
       </div>
 
-      {/* Right section: Terhubung + Bell + Avatar-Caret (Figma 22:361) */}
+      {/* Header Actions */}
       <div className="flex items-center justify-end gap-2 sm:gap-5 h-14">
-        {/* Connection status pill (Figma 22:442) */}
+        {/* Connection Status */}
         <div className="flex items-center">
           <ConnectionStatus
             state={connectionState}
@@ -195,7 +195,7 @@ export function Header({
           />
         </div>
 
-        {/* Group: Notification Bell button with Dropdown (Figma 22:363) */}
+        {/* Notification Bell */}
         <div className="flex items-center justify-end gap-2 rounded-lg">
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
@@ -227,7 +227,7 @@ export function Header({
           </DropdownMenu>
         </div>
 
-        {/* User Avatar + CaretDown with Dropdown (Figma 22:364) */}
+        {/* User Avatar */}
         <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <button
@@ -273,7 +273,7 @@ export function Header({
             sideOffset={8}
             className="w-64 bg-white dark:bg-neutral-n800 border border-neutral-n40 dark:border-neutral-n700 shadow-xl rounded-2xl p-0 overflow-hidden z-50"
           >
-            {/* Header: User Info matching screenshot */}
+            {/* User Info */}
             <div className="p-4 select-none">
               <div className="text-sm font-semibold text-neutral-n900 dark:text-neutral-n100 leading-tight">
                 {userName}
@@ -286,7 +286,7 @@ export function Header({
             {/* Separator */}
             <DropdownMenuSeparator className="my-0 bg-neutral-n40 dark:bg-neutral-n700" />
 
-            {/* Menu Action: Only Log out (per instruction: "tidak ada tombol profile") */}
+            {/* Logout Action */}
             <div className="p-1.5">
               <DropdownMenuItem
                 variant="destructive"

@@ -29,7 +29,6 @@ function DashboardLayout() {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const location = useLocation()
 
-  // Proteksi client-side: Jika belum login, redirect ke halaman login
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const auth = localStorage.getItem('auth_status')
@@ -46,7 +45,6 @@ function DashboardLayout() {
     navigate({ to: '/login' })
   }
 
-  // Otomatis tutup sidebar mobile saat berpindah halaman
   useEffect(() => {
     setIsMobileOpen(false)
   }, [location.pathname])
@@ -65,7 +63,7 @@ function DashboardLayout() {
 
   return (
     <div className="flex h-screen h-dvh w-screen overflow-hidden bg-neutral-n20/60 dark:bg-neutral-n900 font-sans antialiased text-neutral-n900">
-      {/* Sidebar (Responsive: drawer di mobile, persistent di desktop) */}
+      {/* Sidebar */}
       <Sidebar
         isOpen={isSidebarOpen}
         isMobileOpen={isMobileOpen}
@@ -79,9 +77,9 @@ function DashboardLayout() {
         className="shrink-0"
       />
 
-      {/* Main Content Area (Scrollable container sehingga header ikut ter-scroll bersama konten) */}
+      {/* Main Content */}
       <div className="flex flex-col flex-1 min-w-0 h-full overflow-y-auto overflow-x-hidden">
-        {/* Header (Ikut ter-scroll saat halaman di-scroll) */}
+        {/* Header */}
         <Header
           title={activeNav.label}
           breadcrumbs={[activeNav.label]}

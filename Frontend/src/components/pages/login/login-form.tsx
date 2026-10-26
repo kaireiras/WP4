@@ -47,7 +47,7 @@ export function LoginForm({ onLogin, className }: LoginFormProps) {
         className,
       )}
     >
-      {/* 1. Header Formulir (Figma 1:4947) */}
+      {/* Header Formulir */}
       <div className="mb-8">
         <h1 className="text-2xl sm:text-[28px] font-semibold text-white tracking-tight leading-tight">
           Selamat datang kembali
@@ -57,9 +57,9 @@ export function LoginForm({ onLogin, className }: LoginFormProps) {
         </p>
       </div>
 
-      {/* 2. Form Input Fields (Figma 1:4952) */}
+      {/* Form Input Fields */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Email Field (Figma 1:4953) */}
+        {/* Email Field */}
         <div className="space-y-1.5">
           <label
             htmlFor="email-input"
@@ -80,7 +80,7 @@ export function LoginForm({ onLogin, className }: LoginFormProps) {
           </div>
         </div>
 
-        {/* Password Field (Figma 1:4962) */}
+        {/* Password Field */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <label
@@ -125,7 +125,7 @@ export function LoginForm({ onLogin, className }: LoginFormProps) {
           </div>
         </div>
 
-        {/* Submit Button "Masuk" (Figma 1:4979) */}
+        {/* Submit Button */}
         <div className="pt-2">
           <button
             type="submit"
@@ -136,7 +136,7 @@ export function LoginForm({ onLogin, className }: LoginFormProps) {
         </div>
       </form>
 
-      {/* 3. Divider "atau" (Figma 1:4981) */}
+      {/* Divider */}
       <div className="flex items-center gap-3 my-5 select-none">
         <div className="flex-1 h-px bg-neutral-n40/30" />
         <span className="text-xs sm:text-sm font-normal text-neutral-n30/80">
@@ -145,7 +145,7 @@ export function LoginForm({ onLogin, className }: LoginFormProps) {
         <div className="flex-1 h-px bg-neutral-n40/30" />
       </div>
 
-      {/* 4. Google Login Button (Figma 1:4987) */}
+      {/* Google Login Button */}
       <button
         type="button"
         onClick={onLogin}
@@ -155,7 +155,7 @@ export function LoginForm({ onLogin, className }: LoginFormProps) {
         <span>Masuk dengan Google</span>
       </button>
 
-      {/* 5. Footer "Daftar sekarang" (Figma 1:4995) */}
+      {/* Footer */}
       <div className="mt-8 text-center text-xs sm:text-sm text-neutral-n30 select-none">
         <span>Belum punya akun? </span>
         <button

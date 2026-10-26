@@ -52,7 +52,7 @@ export const CURRENT_MODEL_INFO: ModelMetadata = {
   modelId: 'rf-crowd-v2.1-prod-20260915',
 }
 
-// 6 Metrik Utama dari Desain Figma (Node 13:72)
+// Metrik Utama
 export const MODEL_CORE_METRICS: ModelMetricItem[] = [
   {
     id: 'accuracy',

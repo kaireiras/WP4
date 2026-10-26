@@ -19,7 +19,6 @@ function DashboardPage() {
 
   const handleSelectRoom = (roomId: string) => {
     setSelectedRoomId(roomId)
-    // Buka popup dialog jika yang diklik adalah ruangan (bukan area void/kosong)
     if (DENAH_ROOMS.some((r) => r.id === roomId)) {
       setIsDialogOpen(true)
     }
@@ -27,19 +26,19 @@ function DashboardPage() {
 
   return (
     <>
-      {/* 1. Alert Banner for Crowded Rooms (Figma 13:69 -> AlertBanner) */}
+      {/* Alert Banner */}
       <DashboardAlert
         isOpen={isAlertOpen}
         onDismiss={() => setIsAlertOpen(false)}
       />
 
-      {/* 2. Main Page Header (Figma 13:69 -> Main-Header) */}
+      {/* Header */}
       <DashboardHeader
         title="Dashboard"
         subtitle="Lihat keadaan seluruh ruangan"
       />
 
-      {/* 3. Interactive Floor Plan (Figma 13:69 -> Denah) */}
+      {/* Denah */}
       <Denah
         selectedRoom={selectedRoomId ?? undefined}
         onSelectRoom={handleSelectRoom}
@@ -47,7 +46,7 @@ function DashboardPage() {
         showKosong={true}
       />
 
-      {/* 4. Centered Dialog Popup displaying MetricsGrid when a room is clicked */}
+      {/* Room Detail Dialog */}
       <RoomDetailDialog
         roomId={selectedRoomId}
         isOpen={isDialogOpen}

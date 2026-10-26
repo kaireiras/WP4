@@ -24,7 +24,6 @@ export const Route = createFileRoute('/login')({
 function LoginPage() {
   const navigate = useNavigate()
 
-  // Guard jika pengguna sudah login
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const auth = localStorage.getItem('auth_status')
@@ -43,24 +42,24 @@ function LoginPage() {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen w-full bg-white dark:bg-neutral-n900 font-sans antialiased">
-      {/* 1. Kolom Kiri: Formulir Login (Figma 1:4940) */}
+      {/* Formulir Login */}
       <section
         aria-label="Formulir Masuk"
         className="w-full lg:w-[480px] xl:w-[520px] shrink-0 min-h-screen bg-[#023373] flex flex-col justify-center px-6 sm:px-10 lg:px-12 py-10 sm:py-12 text-white relative z-10"
       >
         <div className="w-full max-w-[400px] sm:max-w-[420px] mx-auto">
-          {/* Header ringkas di mobile */}
+          {/* Header Mobile */}
           <LoginMobileHeader />
 
-          {/* Card Info Mode Dev (Langsung login saja) */}
+          {/* Mode Dev */}
           <LoginDevCard onLogin={handleLogin} />
 
-          {/* Formulir Login */}
+          {/* Form */}
           <LoginForm onLogin={handleLogin} />
         </div>
       </section>
 
-      {/* 2. Kolom Kanan: Showcase Branding UGM (Figma 1:5001) */}
+      {/* Showcase Branding */}
       <section
         aria-label="Branding Institusi"
         className="hidden lg:flex flex-1 min-h-screen bg-white dark:bg-neutral-n800 overflow-hidden"

@@ -74,7 +74,7 @@ function GrafikPage() {
 
   return (
     <>
-      {/* 1. Page Header (Figma Main-Header 66:8651) with Actions */}
+      {/* Header */}
       <DashboardHeader
         title="Grafik"
         subtitle="Analisis tren trafik dan okupansi dalam rentang waktu tertentu"
@@ -93,18 +93,18 @@ function GrafikPage() {
         }
       />
 
-      {/* 2. Main Analytics Data Area (Figma 66:8655) */}
+      {/* Main Content */}
       {grafikQuery.isLoading || !grafikQuery.data ? (
         <GrafikCardsSkeleton />
       ) : (
         <div className="space-y-5">
-          {/* Card 1: Traffic Trend (Figma 91:2355) */}
+          {/* Traffic Trend */}
           <TrafficTrendCard data={grafikQuery.data.traffic} />
 
-          {/* Card 2: Active Clients (Figma 135:1325) */}
+          {/* Active Clients */}
           <ActiveClientsCard data={grafikQuery.data.clients} />
 
-          {/* Card 3: Occupancy Timeline (Figma 82:1064) */}
+          {/* Occupancy Timeline */}
           <OccupancyTimelineCard data={grafikQuery.data.occupancy} />
         </div>
       )}

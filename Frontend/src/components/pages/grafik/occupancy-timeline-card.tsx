@@ -28,7 +28,7 @@ export function OccupancyTimelineCard({
         className,
       )}
     >
-      {/* 1. Header & Legends */}
+      {/* Header & Legends */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-base sm:text-lg font-bold tracking-tight text-neutral-n900 dark:text-neutral-n100">
@@ -39,7 +39,7 @@ export function OccupancyTimelineCard({
           </p>
         </div>
 
-        {/* 4 Levels Legend matching Figma Frame 39972 (node 80:2069) */}
+        {/* Levels Legend */}
         <div className="flex items-center gap-3.5 flex-wrap text-xs font-semibold text-neutral-n800 dark:text-neutral-n200 self-start sm:self-center">
           <div className="flex items-center gap-1.5">
             <span className="size-2.5 rounded-xs bg-[#f43f5e] shrink-0" />
@@ -60,7 +60,7 @@ export function OccupancyTimelineCard({
         </div>
       </div>
 
-      {/* 2. Discrete Bar Chart (Figma recharts-bar-:r1:) */}
+      {/* Discrete Bar Chart */}
       <div className="w-full h-64 sm:h-72 -ml-2">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart

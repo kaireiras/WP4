@@ -82,7 +82,7 @@ function AlertPage() {
 
   return (
     <>
-      {/* 1. Page Header with Reusable DashboardHeaderActions (Refresh & TimePicker) */}
+      {/* Header */}
       <DashboardHeader
         title="Riwayat Crowded"
         subtitle="Lihat riwayat kejadian Crowded dan status penanganannya"
@@ -97,7 +97,7 @@ function AlertPage() {
         }
       />
 
-      {/* 2. Alert Table Card with Skeleton Loading & Pagination (Figma 13:71) */}
+      {/* Alert Table Card */}
       <AlertTableCard
         data={alertsQuery.data}
         isLoading={alertsQuery.isLoading}

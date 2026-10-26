@@ -27,7 +27,7 @@ export function AutoRefreshCountdown({
       title={`Otomatis memuat ulang data dalam ${seconds} detik`}
       aria-label={`Otomatis memuat ulang data dalam ${seconds} detik`}
     >
-      {/* Circular Progress Ring matching user design */}
+      {/* Circular Progress Ring */}
       <svg
         className="size-5 -rotate-90 shrink-0"
         viewBox="0 0 20 20"

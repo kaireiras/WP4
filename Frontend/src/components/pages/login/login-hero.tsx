@@ -12,12 +12,11 @@ export function LoginHero({ className }: LoginHeroProps) {
         className,
       )}
     >
-      {/* Spacer atas agar konten utama benar-benar berada di tengah vertikal */}
       <div className="h-6" aria-hidden="true" />
 
-      {/* Main Brand Area (Figma 13:66) */}
+      {/* Brand Area */}
       <div className="flex flex-col items-center text-center max-w-2xl mx-auto my-auto py-6">
-        {/* Logo UGM (Figma 11:735) */}
+        {/* Logo UGM */}
         <div className="w-48 h-48 sm:w-60 sm:h-60 lg:w-72 lg:h-72 mb-6 sm:mb-8 shrink-0 flex items-center justify-center">
           <img
             src="/logo-ugm.svg"
@@ -27,7 +26,7 @@ export function LoginHero({ className }: LoginHeroProps) {
           />
         </div>
 
-        {/* Brand Titles (Figma 13:67, 13:73, 13:74) */}
+        {/* Brand Titles */}
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-primary-600 tracking-tight leading-tight mb-2 sm:mb-3">
           Pendeteksi Keramaian
         </h2>
@@ -39,7 +38,7 @@ export function LoginHero({ className }: LoginHeroProps) {
         </h4>
       </div>
 
-      {/* Bottom Status Pill: Connected (Figma 21:44 -> 22:451) */}
+      {/* Status Pill */}
       <div className="pt-4 flex justify-center w-full">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-success-50 text-white shadow-xs">
           <span className="size-2 rounded-full bg-success-20 shrink-0 animate-pulse" />

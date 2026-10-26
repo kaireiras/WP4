@@ -20,7 +20,7 @@ export function ModelMetricsGrid({ className }: { className?: string }) {
         </div>
       </div>
 
-      {/* Grid of 6 Core Metrics (Figma 13:72) with rich visual variations */}
+      {/* Grid of Core Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {MODEL_CORE_METRICS.map((metric) => (
           <ModelMetricCard key={metric.id} metric={metric} />

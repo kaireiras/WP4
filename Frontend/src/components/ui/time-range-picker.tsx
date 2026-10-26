@@ -212,7 +212,7 @@ export function TimeRangePicker({
           )}
           aria-label="Pilih rentang waktu"
         >
-          {/* Badge indicator (e.g. 1d, 7d, 1mo) */}
+          {/* Badge Indicator */}
           <span className="bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 font-bold text-[11px] leading-tight px-1.5 py-0.5 rounded border border-primary-200/60 dark:border-primary-800/60 shrink-0">
             {activePreset.badge}
           </span>
@@ -231,7 +231,7 @@ export function TimeRangePicker({
         align="end"
         className="w-72 sm:w-80 p-2 max-h-[85vh] overflow-y-auto bg-white dark:bg-neutral-n800 border border-neutral-n40 dark:border-neutral-n700 shadow-xl rounded-xl z-50"
       >
-        {/* Section 1: Quick Ranges (Figma 92:1071..92:1091) */}
+        {/* Quick Ranges */}
         <DropdownMenuLabel className="text-[11px] font-bold text-neutral-n500 uppercase tracking-wider px-2 py-1">
           Rentang Terakhir
         </DropdownMenuLabel>
@@ -266,7 +266,7 @@ export function TimeRangePicker({
 
         <DropdownMenuSeparator className="my-1.5" />
 
-        {/* Section 2: Relative Calendar Ranges (Figma 92:1092..92:1135) */}
+        {/* Relative Calendar Ranges */}
         <DropdownMenuLabel className="text-[11px] font-bold text-neutral-n500 uppercase tracking-wider px-2 py-1">
           Kalender Relatif
         </DropdownMenuLabel>
@@ -298,7 +298,7 @@ export function TimeRangePicker({
 
         <DropdownMenuSeparator className="my-1.5" />
 
-        {/* Section 3: Custom range... (Figma 93:1059) */}
+        {/* Custom Range */}
         {!isCustomOpen ? (
           <button
             type="button"

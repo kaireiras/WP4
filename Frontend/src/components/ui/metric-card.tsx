@@ -254,7 +254,7 @@ export function MetricCard({
           />
         </svg>
 
-        {/* Active Pin Indicator (Rendered as exact circular HTML div with ring and shadow to prevent oval distortion) */}
+        {/* Active Pin Indicator */}
         <div
           className="absolute w-2.5 h-2.5 rounded-full pointer-events-none transition-all duration-150 -translate-x-1/2 -translate-y-1/2 shadow-xs ring-2 ring-white dark:ring-neutral-n800 z-10"
           style={{

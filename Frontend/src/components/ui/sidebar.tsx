@@ -64,7 +64,7 @@ function GraphNavIcon({ className }: { className?: string }) {
   return <SvgIcon src="/icons/nav-model.svg" className={className} />
 }
 
-function LogoutFigmaIcon({ className }: { className?: string }) {
+function LogoutNavIcon({ className }: { className?: string }) {
   return <SvgIcon src="/icons/logout.svg" className={className} />
 }
 
@@ -102,7 +102,7 @@ export function Sidebar({
 
   return (
     <>
-      {/* Mobile Backdrop Overlay (click to dismiss) */}
+      {/* Mobile Backdrop Overlay */}
       <div
         className={cn(
           'fixed inset-0 bg-neutral-900/50 backdrop-blur-xs z-40 transition-opacity duration-300 md:hidden',
@@ -240,7 +240,7 @@ export function Sidebar({
           })}
         </nav>
 
-        {/* Bottom section: User Profile & Log out */}
+        {/* User Profile & Logout */}
         <div className="flex flex-col gap-2.5 pt-2.5 border-t border-neutral-n30 dark:border-neutral-n700 w-full shrink-0 transition-all duration-300 ease-in-out overflow-hidden">
           {/* User Profile Row */}
           <div
@@ -308,7 +308,7 @@ export function Sidebar({
                 : 'md:w-full md:justify-center md:gap-0 md:px-0',
             )}
           >
-            <LogoutFigmaIcon className="w-5 h-5 text-white shrink-0" />
+            <LogoutNavIcon className="w-5 h-5 text-white shrink-0" />
             <span
               className={cn(
                 'truncate whitespace-nowrap transition-all duration-300 ease-in-out',

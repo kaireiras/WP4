@@ -31,7 +31,7 @@ export function ActiveClientsCard({ data, className }: ActiveClientsCardProps) {
         className,
       )}
     >
-      {/* 1. Header & Legends */}
+      {/* Header & Legends */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-base sm:text-lg font-bold tracking-tight text-neutral-n900 dark:text-neutral-n100">
@@ -42,14 +42,14 @@ export function ActiveClientsCard({ data, className }: ActiveClientsCardProps) {
           </p>
         </div>
 
-        {/* Custom Legend */}
+        {/* Legend */}
         <div className="flex items-center gap-2 text-xs font-semibold text-neutral-n800 dark:text-neutral-n200 self-start sm:self-center">
           <span className="size-3 rounded-xs bg-[#2563EB] shrink-0" />
           <span>Active Clients</span>
         </div>
       </div>
 
-      {/* 2. Area Chart */}
+      {/* Area Chart */}
       <div className="w-full h-64 sm:h-72 -ml-2">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
