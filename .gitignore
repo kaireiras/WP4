@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Production & Build Outputs
+dist/
+dist-ssr/
+.output/
+.nitro/
+.tanstack/
+.wrangler/
+.vinxi/
+__unconfig*
+
+# Environment Files (Ignore secrets, keep example template)
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# System & Editor files
+.DS_Store
+todos.json

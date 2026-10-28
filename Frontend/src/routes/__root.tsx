@@ -1,15 +1,15 @@
 import {
   HeadContent,
+  Link,
   Scripts,
   createRootRouteWithContext,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-
+import { Toaster } from '#/components/ui/shadcn/sonner'
+import { HydrationFixScript } from '#/components/ui/hydration-fix'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
-
-import appCss from '../styles.css?url'
-
+import '../styles.css'
 import type { QueryClient } from '@tanstack/react-query'
 
 interface MyRouterContext {
@@ -27,27 +27,59 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: 'PLMD · Aplikasi Pendeteksi Keramaian',
       },
     ],
     links: [
       {
+        rel: 'preconnect',
+        href: 'https://fonts.googleapis.com',
+      },
+      {
+        rel: 'preconnect',
+        href: 'https://fonts.gstatic.com',
+        crossOrigin: 'anonymous',
+      },
+      {
         rel: 'stylesheet',
-        href: appCss,
+        href: 'https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap',
+      },
+      {
+        rel: 'icon',
+        href: '/logo-ugm.svg',
       },
     ],
   }),
+  notFoundComponent: () => {
+    // Komponen 404 Page Not Found
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background text-foreground font-sans">
+        <h1 className="text-4xl font-bold">404</h1>
+        <p className="text-muted-foreground">
+          Halaman yang Anda cari tidak ditemukan.
+        </p>
+        <Link to="/" className="text-primary hover:underline">
+          Kembali ke Dashboard
+        </Link>
+      </div>
+    )
+  },
   shellComponent: RootDocument,
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <HydrationFixScript />
       </head>
-      <body>
+      <body suppressHydrationWarning>
+        {/* Tempat masuk utama aplikasi */}
         {children}
+        <Toaster position="top-right" richColors closeButton theme="light" />
+
+        {/* Devtools akan dihilangkan otomatis di production */}
         <TanStackDevtools
           config={{
             position: 'bottom-right',
