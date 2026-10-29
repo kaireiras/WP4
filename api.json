@@ -1,0 +1,929 @@
+{
+    "openapi": "3.1.2",
+    "info": {
+        "title": "Laravel",
+        "version": "0.0.1"
+    },
+    "servers": [
+        {
+            "url": "http:\/\/localhost:8000\/api"
+        }
+    ],
+    "paths": {
+        "\/v1\/alerts": {
+            "get": {
+                "operationId": "alert.index",
+                "summary": "Mengambil daftar alert terkini",
+                "tags": [
+                    "Alert"
+                ],
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Daftar alert berhasil diambil."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#\/components\/schemas\/Alert"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/v1\/alerts\/{id}\/ack": {
+            "patch": {
+                "operationId": "alert.acknowledge",
+                "summary": "Konfirmasi \/ Acknowledge alert yang aktif",
+                "tags": [
+                    "Alert"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Alert berhasil di-acknowledge."
+                                        },
+                                        "data": {
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#\/components\/schemas\/Alert"
+                                                },
+                                                {
+                                                    "type": "null"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Data alert tidak ditemukan."
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/v1\/admin\/ap": {
+            "get": {
+                "operationId": "apRegistry.index",
+                "summary": "Menampilkan daftar semua AP.\nEndpoint: GET \/api\/v1\/admin\/ap",
+                "tags": [
+                    "ApRegistry"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Daftar Access Point berhasil diambil."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#\/components\/schemas\/ApRegistry"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "operationId": "apRegistry.store",
+                "summary": "Menambahkan AP baru.\nEndpoint: POST \/api\/v1\/admin\/ap",
+                "tags": [
+                    "ApRegistry"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "$ref": "#\/components\/schemas\/StoreApRegistryRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Access Point berhasil ditambahkan."
+                                        },
+                                        "data": {
+                                            "$ref": "#\/components\/schemas\/ApRegistry"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#\/components\/responses\/ValidationException"
+                    }
+                }
+            }
+        },
+        "\/v1\/admin\/ap\/{apId}": {
+            "get": {
+                "operationId": "apRegistry.show",
+                "summary": "Menampilkan detail satu AP.\nEndpoint: GET \/api\/v1\/admin\/ap\/{ap_id}",
+                "tags": [
+                    "ApRegistry"
+                ],
+                "parameters": [
+                    {
+                        "name": "apId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Detail Access Point berhasil diambil."
+                                        },
+                                        "data": {
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#\/components\/schemas\/ApRegistry"
+                                                },
+                                                {
+                                                    "type": "null"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Access Point tidak ditemukan."
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "operationId": "apRegistry.update",
+                "summary": "Memperbarui data AP.\nEndpoint: PUT\/PATCH \/api\/v1\/admin\/ap\/{ap_id}",
+                "tags": [
+                    "ApRegistry"
+                ],
+                "parameters": [
+                    {
+                        "name": "apId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application\/json": {
+                            "schema": {
+                                "$ref": "#\/components\/schemas\/UpdateApRegistryRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Data Access Point berhasil diperbarui."
+                                        },
+                                        "data": {
+                                            "anyOf": [
+                                                {
+                                                    "$ref": "#\/components\/schemas\/ApRegistry"
+                                                },
+                                                {
+                                                    "type": "null"
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Access Point tidak ditemukan."
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#\/components\/responses\/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "apRegistry.destroy",
+                "summary": "Menghapus AP dari daftar monitoring.\nEndpoint: DELETE \/api\/v1\/admin\/ap\/{ap_id}",
+                "tags": [
+                    "ApRegistry"
+                ],
+                "parameters": [
+                    {
+                        "name": "apId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Access Point berhasil dihapus dari pemantauan."
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Access Point tidak ditemukan."
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/v1\/dashboard\/overview": {
+            "get": {
+                "operationId": "dashboard.getOverview",
+                "summary": "1. Overview Denah: Status okupansi snapshot terbaru seluruh ruangan ber-AP",
+                "tags": [
+                    "Dashboard"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Data overview dashboard berhasil diambil."
+                                        },
+                                        "last_sync": {},
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "rooms": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#\/components\/schemas\/ApRoom"
+                                                    }
+                                                },
+                                                "active_alerts": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#\/components\/schemas\/Alert"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "rooms",
+                                                "active_alerts"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "last_sync",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/v1\/rooms\/{roomId}\/live": {
+            "get": {
+                "operationId": "dashboard.getRoomLiveDetail",
+                "summary": "2. Detail Popup Modal Ruangan: Mengembalikan 6 metrik jaringan & okupansi",
+                "tags": [
+                    "Dashboard"
+                ],
+                "parameters": [
+                    {
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "room_id": {
+                                                    "type": "string"
+                                                },
+                                                "ap_id": {
+                                                    "type": "string"
+                                                },
+                                                "last_sync": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        },
+                                                        {
+                                                            "type": "null"
+                                                        }
+                                                    ]
+                                                },
+                                                "level": {
+                                                    "type": "string"
+                                                },
+                                                "estimated_count": {
+                                                    "type": "integer"
+                                                },
+                                                "accuracy_percent": {
+                                                    "type": "integer"
+                                                },
+                                                "metrics": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "rx_rate": {
+                                                            "type": "string"
+                                                        },
+                                                        "rx_rate_raw_kbs": {
+                                                            "type": "number"
+                                                        },
+                                                        "tx_rate": {
+                                                            "type": "string"
+                                                        },
+                                                        "tx_rate_raw_kbs": {
+                                                            "type": "number"
+                                                        },
+                                                        "packets_per_sec": {
+                                                            "type": "integer"
+                                                        },
+                                                        "flow_count": {
+                                                            "type": "integer"
+                                                        },
+                                                        "active_clients": {
+                                                            "type": "integer"
+                                                        },
+                                                        "connection_rate": {
+                                                            "type": "integer"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "rx_rate",
+                                                        "rx_rate_raw_kbs",
+                                                        "tx_rate",
+                                                        "tx_rate_raw_kbs",
+                                                        "packets_per_sec",
+                                                        "flow_count",
+                                                        "active_clients",
+                                                        "connection_rate"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "room_id",
+                                                "ap_id",
+                                                "last_sync",
+                                                "level",
+                                                "estimated_count",
+                                                "accuracy_percent",
+                                                "metrics"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "\/v1\/grafik": {
+            "get": {
+                "operationId": "history.getChartData",
+                "tags": [
+                    "History"
+                ],
+                "parameters": [
+                    {
+                        "name": "ap_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "room_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "start",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "end",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "maximum": 1000
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application\/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Data riwayat grafik berhasil diambil."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#\/components\/responses\/ValidationException"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Alert": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "triggered_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "ap_id": {
+                        "type": "string"
+                    },
+                    "room_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "level": {
+                        "type": "string"
+                    },
+                    "estimated_count": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "acknowledged_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "triggered_at",
+                    "ap_id",
+                    "room_id",
+                    "level",
+                    "estimated_count",
+                    "status",
+                    "acknowledged_at"
+                ],
+                "title": "Alert"
+            },
+            "ApRegistry": {
+                "type": "object",
+                "properties": {
+                    "ap_id": {
+                        "type": "string"
+                    },
+                    "ip_address": {
+                        "type": "string"
+                    },
+                    "snmp_community": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "ap_id",
+                    "ip_address",
+                    "snmp_community",
+                    "created_at"
+                ],
+                "title": "ApRegistry"
+            },
+            "ApRoom": {
+                "type": "object",
+                "properties": {
+                    "ap_id": {
+                        "type": "string"
+                    },
+                    "room_id": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "ap_id",
+                    "room_id"
+                ],
+                "title": "ApRoom"
+            },
+            "StoreApRegistryRequest": {
+                "type": "object",
+                "properties": {
+                    "ap_id": {
+                        "type": "string",
+                        "maxLength": 20
+                    },
+                    "ip_address": {
+                        "type": "string"
+                    },
+                    "snmp_community": {
+                        "type": "string",
+                        "maxLength": 50
+                    }
+                },
+                "required": [
+                    "ap_id",
+                    "ip_address",
+                    "snmp_community"
+                ],
+                "title": "StoreApRegistryRequest"
+            },
+            "UpdateApRegistryRequest": {
+                "type": "object",
+                "properties": {
+                    "ip_address": {
+                        "type": "string"
+                    },
+                    "snmp_community": {
+                        "type": "string",
+                        "maxLength": 50
+                    }
+                },
+                "title": "UpdateApRegistryRequest"
+            }
+        },
+        "responses": {
+            "ValidationException": {
+                "description": "Validation error",
+                "content": {
+                    "application\/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Errors overview."
+                                },
+                                "errors": {
+                                    "type": "object",
+                                    "description": "A detailed description of each field that failed validation.",
+                                    "additionalProperties": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "required": [
+                                "message",
+                                "errors"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
