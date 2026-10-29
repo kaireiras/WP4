@@ -19,7 +19,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/dashboard/overview', [DashboardController::class, 'getOverview']);
     Route::get('/rooms/{roomId}/live', [DashboardController::class, 'getRoomLiveDetail']);
 
-    Route::get('/grafik', [HistoryController::class, 'getChartData']);
+    Route::get('/grafik', [HistoryController::class, 'getGrafik']);
     Route::get('/alerts', [AlertController::class, 'index']);
     Route::patch('/alerts/{id}/ack', [AlertController::class, 'acknowledge']);
 });
