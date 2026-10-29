@@ -17,8 +17,12 @@ export interface DashboardHeaderActionsProps {
   totalSeconds?: number
   /** Nilai detik hitung mundur secara manual/controlled (opsional) */
   seconds?: number
-  /** Preset rentang waktu aktif (default: '1d') */
+  /** Preset rentang waktu aktif (default: 'all') */
   timeRange?: string
+  /** Tanggal awal rentang waktu */
+  timeFrom?: string
+  /** Tanggal akhir rentang waktu */
+  timeTo?: string
   /** Callback saat rentang waktu diubah dari TimeRangePicker */
   onTimeRangeChange?: (value: TimeRangeValue) => void
   /** Apakah menampilkan TimeRangePicker dropdown (default: true) */
@@ -27,6 +31,8 @@ export interface DashboardHeaderActionsProps {
   selectedRoom?: string
   /** Callback saat ruangan diubah dari RoomPicker */
   onRoomChange?: (roomId: string) => void
+  /** Daftar ID ruangan tambahan dari database AP */
+  extraRooms?: Array<string>
   /** Apakah menampilkan RoomPicker dropdown di sebelah kiri tanggal (default: false) */
   showRoomPicker?: boolean
   /** Apakah menampilkan countdown ring (default: true) */
@@ -43,11 +49,14 @@ export function DashboardHeaderActions({
   lastUpdatedAt,
   totalSeconds = 30,
   seconds: controlledSeconds,
-  timeRange = '1d',
+  timeRange = 'all',
+  timeFrom,
+  timeTo,
   onTimeRangeChange,
   showTimeRange = true,
   selectedRoom = 'all',
   onRoomChange,
+  extraRooms,
   showRoomPicker = false,
   showCountdown = true,
   countdownLabel = 'auto-refresh',
@@ -125,12 +134,21 @@ export function DashboardHeaderActions({
 
       {/* Room Picker Dropdown */}
       {showRoomPicker && (
-        <RoomPicker value={selectedRoom} onChange={onRoomChange} />
+        <RoomPicker
+          value={selectedRoom}
+          onChange={onRoomChange}
+          extraRooms={extraRooms}
+        />
       )}
 
       {/* Time Range Picker Dropdown */}
       {showTimeRange && (
-        <TimeRangePicker value={timeRange} onChange={onTimeRangeChange} />
+        <TimeRangePicker
+          value={timeRange}
+          from={timeFrom}
+          to={timeTo}
+          onChange={onTimeRangeChange}
+        />
       )}
     </div>
   )
