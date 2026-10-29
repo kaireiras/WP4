@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Dependencies
 node_modules/
 .pnpm-store/
@@ -29,6 +30,8 @@ pnpm-debug.log*
 .DS_Store
 todos.json
 
+=======
+>>>>>>> a7476ae (initial commit)
 # Environment / secrets
 .env
 *.env
