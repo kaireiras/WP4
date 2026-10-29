@@ -145,42 +145,26 @@ const RELATIVE_PRESETS = [
 
 export interface TimeRangePickerProps {
   value?: string
-  from?: string
-  to?: string
   onChange?: (val: TimeRangeValue) => void
   className?: string
 }
 
 export function TimeRangePicker({
-  value = 'all',
-  from,
-  to,
+  value = '1d',
   onChange,
   className,
 }: TimeRangePickerProps) {
   const [selectedId, setSelectedId] = React.useState(value)
   const [isCustomOpen, setIsCustomOpen] = React.useState(false)
-  const [customFrom, setCustomFrom] = React.useState(from ?? '')
-  const [customTo, setCustomTo] = React.useState(to ?? '')
+  const [customFrom, setCustomFrom] = React.useState('')
+  const [customTo, setCustomTo] = React.useState('')
 
   React.useEffect(() => {
     setSelectedId(value)
   }, [value])
 
-  React.useEffect(() => {
-    if (from !== undefined) setCustomFrom(from)
-    if (to !== undefined) setCustomTo(to)
-  }, [from, to])
-
-  // Active Preset
+  // Get current active preset or custom label
   const activePreset = React.useMemo(() => {
-    if (selectedId === 'all') {
-      return {
-        id: 'all',
-        label: 'Semua Waktu',
-        badge: 'ALL',
-      }
-    }
     const all = [...QUICK_PRESETS, ...RELATIVE_PRESETS]
     return (
       all.find((p) => p.id === selectedId) || {
@@ -192,44 +176,17 @@ export function TimeRangePicker({
   }, [selectedId])
 
   const rangeDates = React.useMemo(() => {
-    if (selectedId === 'all') {
-      return { from: '', to: '' }
-    }
-    if (from && to) {
-      return { from: from.replace('T', ' '), to: to.replace('T', ' ') }
-    }
     if (selectedId === 'custom' && customFrom && customTo) {
-      return {
-        from: customFrom.replace('T', ' '),
-        to: customTo.replace('T', ' '),
-      }
+      return { from: customFrom, to: customTo }
     }
     return calculatePresetRange(selectedId)
-  }, [selectedId, from, to, customFrom, customTo])
-
-  const handleSelectAll = () => {
-    setSelectedId('all')
-    setIsCustomOpen(false)
-    onChange?.({
-      id: 'all',
-      label: 'Semua Waktu',
-      badge: 'ALL',
-      from: '',
-      to: '',
-    })
-  }
+  }, [selectedId, customFrom, customTo])
 
   const handleSelectPreset = (id: string, label: string, badge: string) => {
     setSelectedId(id)
     setIsCustomOpen(false)
-    const calculated = calculatePresetRange(id)
-    onChange?.({
-      id,
-      label,
-      badge,
-      from: calculated.from,
-      to: calculated.to,
-    })
+    const { from, to } = calculatePresetRange(id)
+    onChange?.({ id, label, badge, from, to })
   }
 
   const handleApplyCustom = () => {
@@ -262,9 +219,7 @@ export function TimeRangePicker({
 
           {/* Formatted Date Range String */}
           <span className="text-xs font-semibold text-neutral-n900 dark:text-neutral-n100 tracking-tight whitespace-nowrap">
-            {selectedId === 'all'
-              ? 'Semua Rentang Waktu'
-              : `${rangeDates.from} - ${rangeDates.to}`}
+            {rangeDates.from} - {rangeDates.to}
           </span>
 
           {/* Dropdown Chevron */}
@@ -276,28 +231,6 @@ export function TimeRangePicker({
         align="end"
         className="w-72 sm:w-80 p-2 max-h-[85vh] overflow-y-auto bg-white dark:bg-neutral-n800 border border-neutral-n40 dark:border-neutral-n700 shadow-xl rounded-xl z-50"
       >
-        {/* All Time */}
-        <DropdownMenuItem
-          onClick={handleSelectAll}
-          className={cn(
-            'text-xs cursor-pointer flex items-center justify-between py-1.5 px-2 font-medium rounded-md transition-colors',
-            selectedId === 'all' &&
-              'font-bold text-primary-600 bg-primary-50 dark:bg-primary-950/40',
-          )}
-        >
-          <div className="flex items-center gap-2.5">
-            <span className="inline-block w-8 text-center text-[11px] font-mono font-semibold py-0.5 rounded bg-primary-100 dark:bg-primary-900/60 text-primary-700 dark:text-primary-300">
-              ALL
-            </span>
-            <span>Semua Waktu</span>
-          </div>
-          {selectedId === 'all' && (
-            <Check className="size-3.5 text-primary-600 shrink-0" />
-          )}
-        </DropdownMenuItem>
-
-        <DropdownMenuSeparator className="my-1.5" />
-
         {/* Quick Ranges */}
         <DropdownMenuLabel className="text-[11px] font-bold text-neutral-n500 uppercase tracking-wider px-2 py-1">
           Rentang Terakhir

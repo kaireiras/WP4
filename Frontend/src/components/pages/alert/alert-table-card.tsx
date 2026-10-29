@@ -1,17 +1,13 @@
 import * as React from 'react'
-import {
-  AlertCircle,
-  Calendar,
-  CheckCircle2,
-  Loader2,
-  RefreshCw,
-} from 'lucide-react'
+import { Calendar, CheckCircle2 } from 'lucide-react'
 import { flexRender } from '@tanstack/react-table'
 import {
   getCoreRowModel,
   useLegacyTable as useReactTable,
 } from '@tanstack/react-table/legacy'
 import type { LegacyColumnDef as ColumnDef } from '@tanstack/react-table/legacy'
+import { toast } from 'sonner'
+import { DUMMY_ALERTS } from './alert-data'
 import type { AlertItem } from './alert-data'
 import { AlertStatusBadge } from './alert-status-badge'
 import { AlertPagination } from './alert-pagination'
@@ -30,10 +26,6 @@ import { cn } from '#/lib/utils'
 export interface AlertTableCardProps {
   data?: Array<AlertItem>
   isLoading?: boolean
-  isError?: boolean
-  errorMessage?: string
-  onRetry?: () => void
-  acknowledgingId?: string | null
   className?: string
   page?: number
   perPage?: number
@@ -43,12 +35,8 @@ export interface AlertTableCardProps {
 }
 
 export function AlertTableCard({
-  data = [],
+  data = DUMMY_ALERTS,
   isLoading = false,
-  isError = false,
-  errorMessage,
-  onRetry,
-  acknowledgingId = null,
   className,
   page: controlledPage,
   perPage: controlledPerPage,
@@ -56,23 +44,71 @@ export function AlertTableCard({
   onPerPageChange: controlledOnPerPageChange,
   onAcknowledge,
 }: AlertTableCardProps) {
+  const [alerts, setAlerts] = React.useState<Array<AlertItem>>(data)
   const [internalPage, setInternalPage] = React.useState(1)
   const [internalPerPage, setInternalPerPage] = React.useState(20)
 
   const currentPage = controlledPage ?? internalPage
   const perPage = controlledPerPage ?? internalPerPage
 
-  // Pagination
-  const totalItems = data.length
+  // Sync internal state when external data prop changes
+  React.useEffect(() => {
+    setAlerts(data)
+  }, [data])
+
+  // Pagination calculation
+  const totalItems = alerts.length
   const totalPages = Math.ceil(totalItems / perPage) || 1
-  const safePage = Math.min(currentPage, totalPages)
-  const startIndex = (safePage - 1) * perPage
+  const startIndex = (currentPage - 1) * perPage
   const paginatedAlerts = React.useMemo(
-    () => data.slice(startIndex, startIndex + perPage),
-    [data, startIndex, perPage],
+    () => alerts.slice(startIndex, startIndex + perPage),
+    [alerts, startIndex, perPage],
   )
 
-  // Table Columns
+  // Handle acknowledge action
+  const handleAcknowledge = React.useCallback(
+    (id: string) => {
+      const target = alerts.find((a) => a.id === id)
+      if (!target) return
+
+      const now = new Date()
+      const formattedNow = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
+
+      let updatedItem: AlertItem = target
+
+      setAlerts((prev) =>
+        prev.map((item) => {
+          if (item.id === id) {
+            const nextStatus =
+              item.status === 'active' ? 'acknowledged' : 'active'
+            updatedItem = {
+              ...item,
+              status: nextStatus,
+              ackAt: nextStatus === 'acknowledged' ? formattedNow : null,
+            }
+            return updatedItem
+          }
+          return item
+        }),
+      )
+
+      onAcknowledge?.(updatedItem)
+
+      if (target.status === 'active') {
+        toast.success(
+          `Alert #${target.no} (${target.estCount}) berhasil di-acknowledge!`,
+          {
+            description: target.roomName ?? 'Status telah diperbarui.',
+          },
+        )
+      } else {
+        toast.info(`Status Alert #${target.no} dikembalikan ke Active.`)
+      }
+    },
+    [alerts, onAcknowledge],
+  )
+
+  // Define table columns using TanStack Table ColumnDef
   const columns = React.useMemo<Array<ColumnDef<AlertItem>>>(
     () => [
       {
@@ -145,45 +181,32 @@ export function AlertTableCard({
         cell: ({ row }) => {
           const item = row.original
           const isActive = item.status === 'active'
-          const isProcessing = acknowledgingId === item.id
-
           return (
             <div className="text-right pr-1">
               <button
                 type="button"
-                disabled={!isActive || isProcessing}
-                onClick={() => isActive && onAcknowledge?.(item)}
+                onClick={() => handleAcknowledge(item.id)}
                 className={cn(
-                  'inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all shadow-xs',
+                  'inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer shadow-xs active:scale-95',
                   isActive
-                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20 cursor-pointer active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed'
-                    : 'bg-neutral-n20 dark:bg-neutral-n700 border border-neutral-n40 dark:border-neutral-n600 text-neutral-n500 dark:text-neutral-n400 cursor-not-allowed',
+                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20'
+                    : 'bg-neutral-n20 dark:bg-neutral-n700 border border-neutral-n40 dark:border-neutral-n600 text-neutral-n700 dark:text-neutral-n200 hover:bg-neutral-n30',
                 )}
               >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="size-3.5 shrink-0 animate-spin" />
-                    <span>Memproses...</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="size-3.5 shrink-0" />
-                    <span>{isActive ? 'Acknowledge' : 'Acknowledged'}</span>
-                  </>
-                )}
+                <CheckCircle2 className="size-3.5 shrink-0" />
+                <span>Acknowledge</span>
               </button>
             </div>
           )
         },
       },
     ],
-    [startIndex, acknowledgingId, onAcknowledge],
+    [startIndex, handleAcknowledge],
   )
 
   const table = useReactTable({
     data: paginatedAlerts,
     columns,
-    getRowId: (row) => row.id,
     getCoreRowModel: getCoreRowModel(),
   })
 
@@ -215,33 +238,9 @@ export function AlertTableCard({
       {isLoading ? (
         <TableSkeleton
           columns={columns.length}
-          rows={Math.min(perPage, 10)}
+          rows={perPage}
           className="border-0 rounded-none bg-transparent"
         />
-      ) : isError ? (
-        <div className="flex flex-col items-center justify-center gap-3 py-16 px-4 text-center">
-          <div className="size-10 rounded-full bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center">
-            <AlertCircle className="size-5" />
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-bold text-neutral-n900 dark:text-neutral-n100">
-              Gagal memuat riwayat alert
-            </p>
-            <p className="text-xs text-muted-foreground max-w-md">
-              {errorMessage ?? 'Terjadi gangguan koneksi ke server API.'}
-            </p>
-          </div>
-          {onRetry && (
-            <button
-              type="button"
-              onClick={onRetry}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold transition-colors cursor-pointer"
-            >
-              <RefreshCw className="size-3.5" />
-              <span>Coba Lagi</span>
-            </button>
-          )}
-        </div>
       ) : (
         <div className="overflow-x-auto">
           <Table>
@@ -301,9 +300,9 @@ export function AlertTableCard({
       )}
 
       {/* Pagination */}
-      {!isLoading && !isError && (
+      {!isLoading && (
         <AlertPagination
-          currentPage={safePage}
+          currentPage={currentPage}
           totalPages={totalPages}
           totalItems={totalItems}
           perPage={perPage}

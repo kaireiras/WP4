@@ -1,22 +1,21 @@
 import { AlertBanner } from '#/components/ui/alert-banner'
+import { CROWDED_ROOM_IDS } from './dashboard-data'
 
 export interface DashboardAlertProps {
   isOpen?: boolean
-  crowdedRooms?: Array<string>
   onDismiss?: () => void
 }
 
 export function DashboardAlert({
   isOpen = true,
-  crowdedRooms = [],
   onDismiss,
 }: DashboardAlertProps) {
-  if (!isOpen || crowdedRooms.length === 0) return null
+  if (!isOpen) return null
 
   return (
     <div className="w-full transition-all duration-300">
       <AlertBanner
-        crowdedRooms={crowdedRooms}
+        crowdedRooms={[...CROWDED_ROOM_IDS]}
         onDismiss={onDismiss}
         showDismiss={true}
       />

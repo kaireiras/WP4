@@ -1,25 +1,18 @@
 import type { StatusLevelType } from '#/components/ui/status-level'
 
 export interface TrafficDataPoint {
-  pointKey?: string
   time: string
-  fullTime?: string
   rxRate: number // in KB/s or Mbps
   txRate: number
 }
 
 export interface ActiveClientsDataPoint {
-  pointKey?: string
   time: string
-  fullTime?: string
   clients: number
-  isNull?: boolean
 }
 
 export interface OccupancyDataPoint {
-  pointKey?: string
   time: string
-  fullTime?: string
   levelValue: number // 0: Low, 1: Medium, 2: High, 3: Crowded
   level: StatusLevelType
   estCount: string

@@ -21,11 +21,6 @@ export function OccupancyTimelineCard({
   data,
   className,
 }: OccupancyTimelineCardProps) {
-  const chartData = data.map((item, idx) => ({
-    ...item,
-    pointKey: item.pointKey ?? String(idx),
-  }))
-
   return (
     <div
       className={cn(
@@ -69,7 +64,7 @@ export function OccupancyTimelineCard({
       <div className="w-full h-64 sm:h-72 -ml-2">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            data={chartData}
+            data={data}
             margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
           >
             <CartesianGrid
@@ -79,16 +74,10 @@ export function OccupancyTimelineCard({
             />
 
             <XAxis
-              dataKey="pointKey"
+              dataKey="time"
               tickLine={false}
               axisLine={{ stroke: '#cbd5e1' }}
               tick={{ fill: '#64748b', fontSize: 11 }}
-              tickFormatter={(value) => {
-                const idx = Number(value)
-                return Number.isFinite(idx) && chartData[idx]
-                  ? chartData[idx].time
-                  : String(value)
-              }}
             />
 
             <YAxis
@@ -110,7 +99,7 @@ export function OccupancyTimelineCard({
                   return (
                     <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 p-2.5 rounded-lg shadow-md text-xs space-y-1.5">
                       <div className="font-bold text-neutral-800 dark:text-neutral-200">
-                        Waktu: {entry.fullTime ?? entry.time}
+                        Waktu: {entry.time}
                       </div>
                       <div className="flex items-center gap-2">
                         <span
@@ -134,15 +123,10 @@ export function OccupancyTimelineCard({
               }}
             />
 
-            <Bar
-              dataKey="levelValue"
-              radius={[6, 6, 0, 0]}
-              maxBarSize={45}
-              minPointSize={6}
-            >
-              {chartData.map((entry, index) => (
+            <Bar dataKey="levelValue" radius={[6, 6, 0, 0]} maxBarSize={45}>
+              {data.map((entry, index) => (
                 <Cell
-                  key={`cell-bar-${entry.pointKey}-${index}`}
+                  key={`cell-bar-${index}`}
                   fill={getOccupancyColor(entry.level)}
                   className="transition-opacity hover:opacity-85"
                 />

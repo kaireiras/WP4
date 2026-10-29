@@ -16,19 +16,6 @@ export interface TrafficTrendCardProps {
 }
 
 export function TrafficTrendCard({ data, className }: TrafficTrendCardProps) {
-  const chartData = data.map((item, idx) => ({
-    ...item,
-    pointKey: item.pointKey ?? String(idx),
-  }))
-
-  const maxRate = Math.max(
-    ...chartData.map((d) => Math.max(d.rxRate, d.txRate)),
-    100,
-  )
-  const step = maxRate <= 100 ? 20 : Math.ceil(maxRate / 5 / 20) * 20
-  const yDomainMax = step * 5
-  const yTicks = [0, step, step * 2, step * 3, step * 4, yDomainMax]
-
   return (
     <div
       className={cn(
@@ -64,7 +51,7 @@ export function TrafficTrendCard({ data, className }: TrafficTrendCardProps) {
       <div className="w-full h-64 sm:h-72 -ml-2">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
-            data={chartData}
+            data={data}
             margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
           >
             <defs>
@@ -85,21 +72,15 @@ export function TrafficTrendCard({ data, className }: TrafficTrendCardProps) {
             />
 
             <XAxis
-              dataKey="pointKey"
+              dataKey="time"
               tickLine={false}
               axisLine={{ stroke: '#cbd5e1' }}
               tick={{ fill: '#64748b', fontSize: 11 }}
-              tickFormatter={(value) => {
-                const idx = Number(value)
-                return Number.isFinite(idx) && chartData[idx]
-                  ? chartData[idx].time
-                  : String(value)
-              }}
             />
 
             <YAxis
-              domain={[0, yDomainMax]}
-              ticks={yTicks}
+              domain={[0, 100]}
+              ticks={[0, 20, 40, 60, 80, 100]}
               tickLine={false}
               axisLine={{ stroke: '#cbd5e1' }}
               tick={{ fill: '#64748b', fontSize: 11 }}
@@ -108,15 +89,10 @@ export function TrafficTrendCard({ data, className }: TrafficTrendCardProps) {
             <Tooltip
               content={({ active, payload, label }) => {
                 if (active && payload.length) {
-                  const point = payload[0]?.payload as
-                    TrafficDataPoint | undefined
-                  const displayTime =
-                    point?.fullTime ?? point?.time ?? String(label)
-
                   return (
                     <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 p-2.5 rounded-lg shadow-md text-xs space-y-1">
                       <div className="font-bold text-neutral-800 dark:text-neutral-200">
-                        Waktu: {displayTime}
+                        Waktu: {label}
                       </div>
                       <div className="flex items-center gap-2 text-[#FF6107] font-semibold">
                         <span className="size-2 rounded-full bg-[#FF6107]" />
@@ -139,12 +115,6 @@ export function TrafficTrendCard({ data, className }: TrafficTrendCardProps) {
               stroke="#FF6107"
               strokeWidth={2.5}
               fill="url(#rxGradient)"
-              dot={
-                chartData.length <= 15
-                  ? { r: 4, strokeWidth: 2, stroke: '#FF6107', fill: '#ffffff' }
-                  : false
-              }
-              activeDot={{ r: 6, strokeWidth: 2 }}
             />
 
             <Area
@@ -153,12 +123,6 @@ export function TrafficTrendCard({ data, className }: TrafficTrendCardProps) {
               stroke="#DBCC8F"
               strokeWidth={2.5}
               fill="url(#txGradient)"
-              dot={
-                chartData.length <= 15
-                  ? { r: 4, strokeWidth: 2, stroke: '#DBCC8F', fill: '#ffffff' }
-                  : false
-              }
-              activeDot={{ r: 6, strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>
