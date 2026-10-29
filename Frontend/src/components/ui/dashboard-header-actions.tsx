@@ -17,7 +17,7 @@ export interface DashboardHeaderActionsProps {
   totalSeconds?: number
   /** Nilai detik hitung mundur secara manual/controlled (opsional) */
   seconds?: number
-  /** Preset rentang waktu aktif (default: 'all') */
+  /** Preset rentang waktu aktif (default: 'today') */
   timeRange?: string
   /** Tanggal awal rentang waktu */
   timeFrom?: string
@@ -49,7 +49,7 @@ export function DashboardHeaderActions({
   lastUpdatedAt,
   totalSeconds = 30,
   seconds: controlledSeconds,
-  timeRange = 'all',
+  timeRange = 'today',
   timeFrom,
   timeTo,
   onTimeRangeChange,

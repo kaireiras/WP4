@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import { DashboardHeader, DashboardHeaderActions } from '#/components/ui'
 import type { TimeRangeValue } from '#/components/ui'
+import { calculatePresetRange } from '#/components/ui/time-range-picker'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +30,7 @@ const alertSearchSchema = z.object({
   page: z.coerce.number().int().positive().catch(1),
   per_page: z.coerce.number().int().positive().catch(20),
   status: z.enum(['ACTIVE', 'ACKNOWLEDGED']).optional().catch(undefined),
-  range: z.string().catch('all'),
+  range: z.string().catch('today'),
   from: z.string().optional(),
   to: z.string().optional(),
 })
@@ -53,7 +54,7 @@ export const Route = createFileRoute('/_dashboard/alert')({
       ...search,
       status: rawStatus,
       per_page: search.per_page ?? search.perpage,
-      range: (typeof search.range === 'string' && search.range) || 'all',
+      range: (typeof search.range === 'string' && search.range) || 'today',
     })
   },
   loaderDeps: ({ search }) => ({
@@ -100,12 +101,9 @@ function AlertPage() {
     const rawList = alertsQuery.data?.data ?? []
     const mapped = rawList.map((item, idx) => mapApiAlertToAlertItem(item, idx))
 
-    if (!from && !to) {
-      return mapped
-    }
-
-    const startBound = normalizeHistoryDateParam(from, false)
-    const endBound = normalizeHistoryDateParam(to, true)
+    const bounds = from && to ? { from, to } : calculatePresetRange(range)
+    const startBound = normalizeHistoryDateParam(bounds.from, false)
+    const endBound = normalizeHistoryDateParam(bounds.to, true)
 
     return mapped
       .filter((item) => {
@@ -117,7 +115,7 @@ function AlertPage() {
         ...item,
         no: idx + 1,
       }))
-  }, [alertsQuery.data, from, to])
+  }, [alertsQuery.data, range, from, to])
 
   const handleAcknowledge = (item: AlertItem) => {
     const numericId = Number(item.id)
@@ -171,8 +169,8 @@ function AlertPage() {
       search: (prev) => ({
         ...prev,
         range: val.id,
-        from: val.id === 'all' ? undefined : val.from,
-        to: val.id === 'all' ? undefined : val.to,
+        from: val.from,
+        to: val.to,
         page: 1,
         per_page: prev.per_page ?? per_page,
       }),

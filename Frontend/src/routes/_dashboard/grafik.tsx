@@ -6,6 +6,7 @@ import { AlertCircle, BarChart3, RefreshCw } from 'lucide-react'
 import { z } from 'zod'
 import { DashboardHeader, DashboardHeaderActions } from '#/components/ui'
 import type { TimeRangeValue } from '#/components/ui'
+import { calculatePresetRange } from '#/components/ui/time-range-picker'
 import {
   ActiveClientsCard,
   GrafikCardsSkeleton,
@@ -21,7 +22,7 @@ import {
 // Search Params Schema
 const grafikSearchSchema = z.object({
   room: z.string().catch('all'),
-  range: z.string().catch('all'),
+  range: z.string().catch('today'),
   from: z.string().optional(),
   to: z.string().optional(),
   limit: z.coerce.number().int().positive().max(1000).catch(100),
@@ -32,21 +33,28 @@ export const Route = createFileRoute('/_dashboard/grafik')({
     return grafikSearchSchema.parse({
       ...search,
       room: (typeof search.room === 'string' && search.room) || 'all',
-      range: (typeof search.range === 'string' && search.range) || 'all',
+      range: (typeof search.range === 'string' && search.range) || 'today',
     })
   },
   loaderDeps: ({ search }) => ({
     room: search.room,
+    range: search.range,
     from: search.from,
     to: search.to,
     limit: search.limit,
   }),
   loader: async ({ context, deps }) => {
+    const bounds =
+      deps.from && deps.to
+        ? { from: deps.from, to: deps.to }
+        : calculatePresetRange(deps.range)
+
     await context.queryClient.prefetchQuery({
       queryKey: [
         'history-grafik',
         {
           room: deps.room,
+          range: deps.range,
           from: deps.from,
           to: deps.to,
           limit: deps.limit,
@@ -57,8 +65,8 @@ export const Route = createFileRoute('/_dashboard/grafik')({
           data: {
             params: {
               room_id: deps.room === 'all' ? undefined : deps.room,
-              start: deps.from,
-              end: deps.to,
+              start: bounds.from,
+              end: bounds.to,
               limit: deps.limit,
             },
           },
@@ -77,18 +85,21 @@ function GrafikPage() {
 
   // Fetch History Data
   const historyQuery = useQuery({
-    queryKey: ['history-grafik', { room, from, to, limit }],
-    queryFn: () =>
-      getHistoryChartFn({
+    queryKey: ['history-grafik', { room, range, from, to, limit }],
+    queryFn: () => {
+      const bounds = from && to ? { from, to } : calculatePresetRange(range)
+
+      return getHistoryChartFn({
         data: {
           params: {
             room_id: room === 'all' ? undefined : room,
-            start: from,
-            end: to,
+            start: bounds.from,
+            end: bounds.to,
             limit,
           },
         },
-      }),
+      })
+    },
     refetchInterval: 30000,
     refetchIntervalInBackground: false,
     staleTime: 15000,
@@ -130,23 +141,8 @@ function GrafikPage() {
       search: (prev) => ({
         ...prev,
         range: val.id,
-        from: val.id === 'all' ? undefined : val.from,
-        to: val.id === 'all' ? undefined : val.to,
-        room: prev.room ?? room,
-        limit: prev.limit ?? limit,
-      }),
-      replace: true,
-    })
-  }
-
-  const handleResetTimeFilter = () => {
-    navigate({
-      to: '/grafik',
-      search: (prev) => ({
-        ...prev,
-        range: 'all',
-        from: undefined,
-        to: undefined,
+        from: val.from,
+        to: val.to,
         room: prev.room ?? room,
         limit: prev.limit ?? limit,
       }),
@@ -216,19 +212,10 @@ function GrafikPage() {
             </p>
             <p className="text-xs text-muted-foreground max-w-md">
               Tidak ditemukan data trafik maupun okupansi untuk filter ruangan{' '}
-              <strong>{room === 'all' ? 'Semua Ruangan' : room}</strong>
-              {from || to ? ' pada rentang waktu yang dipilih.' : '.'}
+              <strong>{room === 'all' ? 'Semua Ruangan' : room}</strong> pada
+              rentang waktu yang dipilih.
             </p>
           </div>
-          {(from || to) && (
-            <button
-              type="button"
-              onClick={handleResetTimeFilter}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold transition-colors cursor-pointer"
-            >
-              <span>Tampilkan Semua Waktu</span>
-            </button>
-          )}
         </div>
       ) : (
         <div className="space-y-5">
