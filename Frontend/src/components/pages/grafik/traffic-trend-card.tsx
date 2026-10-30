@@ -103,6 +103,13 @@ export function TrafficTrendCard({ data, className }: TrafficTrendCardProps) {
               tickLine={false}
               axisLine={{ stroke: '#cbd5e1' }}
               tick={{ fill: '#64748b', fontSize: 11 }}
+              tickFormatter={(val) => {
+                const n = Number(val)
+                if (n >= 1024) {
+                  return `${(n / 1024).toFixed(n >= 10240 ? 0 : 1)} MB/s`
+                }
+                return `${n} KB/s`
+              }}
             />
 
             <Tooltip
@@ -112,6 +119,8 @@ export function TrafficTrendCard({ data, className }: TrafficTrendCardProps) {
                     TrafficDataPoint | undefined
                   const displayTime =
                     point?.fullTime ?? point?.time ?? String(label)
+                  const rxVal = Number(payload[0]?.value ?? 0)
+                  const txVal = Number(payload[1]?.value ?? 0)
 
                   return (
                     <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 p-2.5 rounded-lg shadow-md text-xs space-y-1">
@@ -120,11 +129,21 @@ export function TrafficTrendCard({ data, className }: TrafficTrendCardProps) {
                       </div>
                       <div className="flex items-center gap-2 text-[#FF6107] font-semibold">
                         <span className="size-2 rounded-full bg-[#FF6107]" />
-                        <span>RX Rate: {payload[0]?.value} KB/s</span>
+                        <span>
+                          RX Rate:{' '}
+                          {rxVal >= 1024
+                            ? `${(rxVal / 1024).toFixed(2)} MB/s (${rxVal.toLocaleString()} KB/s)`
+                            : `${rxVal} KB/s`}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 text-[#b09e53] dark:text-[#DBCC8F] font-semibold">
                         <span className="size-2 rounded-full bg-[#DBCC8F]" />
-                        <span>TX Rate: {payload[1]?.value} KB/s</span>
+                        <span>
+                          TX Rate:{' '}
+                          {txVal >= 1024
+                            ? `${(txVal / 1024).toFixed(2)} MB/s (${txVal.toLocaleString()} KB/s)`
+                            : `${txVal} KB/s`}
+                        </span>
                       </div>
                     </div>
                   )

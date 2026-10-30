@@ -25,12 +25,18 @@ export type HistoryChartRecord = {
   ts: string
   ap_id?: string
   room_id: string | null
-  estimated_count: number | string | null
+  estimated_count?: number | string | null
   level?: ApiOccupancyLevel
   confidence?: number | string | null
-  n_clients: number | string | null
-  rx_rate: number | string | null
-  tx_rate: number | string | null
+  n_clients?: number | string | null
+  active_clients?: number | string | null
+  rx_rate?: number | string | null
+  tx_rate?: number | string | null
+  rx_rate_kbs?: number | string | null
+  tx_rate_kbs?: number | string | null
+  rx_rate_formatted?: string
+  tx_rate_formatted?: string
+  packets_per_sec?: number
 }
 
 export type HistoryChartResponse = {
@@ -135,11 +141,18 @@ export function mapHistoryRecordsToGrafikData(
     const pointKey = String(index)
     const time = labels[index] ?? record.ts
     const fullTime = formatApiDateTime(record.ts) ?? record.ts
-    const rxRate = Number(record.rx_rate ?? 0)
-    const txRate = Number(record.tx_rate ?? 0)
-    const isClientsNull = record.n_clients === null
-    const nClients = isClientsNull ? 0 : Number(record.n_clients)
-    const estimatedCount = Number(record.estimated_count ?? 0)
+    const rxRateRaw = record.rx_rate_kbs ?? record.rx_rate ?? 0
+    const txRateRaw = record.tx_rate_kbs ?? record.tx_rate ?? 0
+    const rxRate = Number(rxRateRaw)
+    const txRate = Number(txRateRaw)
+
+    const rawClients = record.active_clients ?? record.n_clients
+    const isClientsNull = rawClients === null || rawClients === undefined
+    const nClients = isClientsNull ? 0 : Number(rawClients)
+
+    const rawEstCount =
+      record.estimated_count ?? record.active_clients ?? record.n_clients
+    const estimatedCount = Number(rawEstCount ?? 0)
 
     let level: StatusLevelType
     let levelValue: number
