@@ -2,8 +2,9 @@ import * as React from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { cn } from '#/lib/utils'
 
-export type NavItemId = 'dashboard' | 'grafik' | 'alert' | 'model'
-export type NavRoutePath = '/dashboard' | '/grafik' | '/alert' | '/model'
+export type NavItemId = 'dashboard' | 'grafik' | 'alert' | 'model' | 'ap'
+export type NavRoutePath =
+  '/dashboard' | '/grafik' | '/alert' | '/model' | '/ap'
 
 export interface NavItem {
   id: NavItemId
@@ -64,6 +65,10 @@ function GraphNavIcon({ className }: { className?: string }) {
   return <SvgIcon src="/icons/nav-model.svg" className={className} />
 }
 
+function WifiNavIcon({ className }: { className?: string }) {
+  return <SvgIcon src="/icons/nav-ap.svg" className={className} />
+}
+
 function LogoutNavIcon({ className }: { className?: string }) {
   return <SvgIcon src="/icons/logout.svg" className={className} />
 }
@@ -77,6 +82,7 @@ export const defaultNavItems: NavItem[] = [
   },
   { id: 'grafik', label: 'Grafik', href: '/grafik', icon: ChartLineNavIcon },
   { id: 'alert', label: 'Alert', href: '/alert', icon: ExclamationMarkNavIcon },
+  { id: 'ap', label: 'AP Management', href: '/ap', icon: WifiNavIcon },
   { id: 'model', label: 'Model', href: '/model', icon: GraphNavIcon },
 ]
 

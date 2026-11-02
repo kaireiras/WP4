@@ -1,13 +1,17 @@
 import {
-  createFileRoute,
   Outlet,
+  createFileRoute,
   redirect,
   useLocation,
   useNavigate,
 } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { useServerFn } from '@tanstack/react-start'
 import { useEffect, useState } from 'react'
 import { Header } from '#/components/ui/header'
 import { Sidebar, defaultNavItems } from '#/components/ui/sidebar'
+import { extractApiTime } from '#/services/alertService'
+import { getDashboardOverview } from '#/services/dashboardService'
 
 export const Route = createFileRoute('/_dashboard')({
   beforeLoad: () => {
@@ -28,6 +32,16 @@ function DashboardLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const location = useLocation()
+
+  const getDashboardOverviewFn = useServerFn(getDashboardOverview)
+
+  const syncQuery = useQuery({
+    queryKey: ['dashboard-overview'],
+    queryFn: () => getDashboardOverviewFn(),
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    staleTime: 15000,
+  })
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -61,6 +75,9 @@ function DashboardLayout() {
     }
   }
 
+  const connectionState = syncQuery.isError ? 'disconnected' : 'synced'
+  const lastSyncTime = extractApiTime(syncQuery.data?.last_sync) ?? '-'
+
   return (
     <div className="flex h-screen h-dvh w-screen overflow-hidden bg-neutral-n20/60 dark:bg-neutral-n900 font-sans antialiased text-neutral-n900">
       {/* Sidebar */}
@@ -84,8 +101,8 @@ function DashboardLayout() {
           title={activeNav.label}
           breadcrumbs={[activeNav.label]}
           onToggleSidebar={handleToggleSidebar}
-          connectionState="synced"
-          lastSyncTime="12:09:15"
+          connectionState={connectionState}
+          lastSyncTime={lastSyncTime}
           userName="Fauzan Trisuladana"
           userEmail="fauzantrisuladana@gmail.com"
           onLogout={handleLogout}

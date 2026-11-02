@@ -23,7 +23,7 @@ function formatDatetime(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-function calculatePresetRange(id: string): { from: string; to: string } {
+export function calculatePresetRange(id: string): { from: string; to: string } {
   const now = new Date()
   const toStr = formatDatetime(now)
   let fromDate = new Date(now)
@@ -116,7 +116,14 @@ function calculatePresetRange(id: string): { from: string; to: string } {
       return { from: formatDatetime(pyFrom), to: formatDatetime(pyTo) }
     }
     default:
-      fromDate.setDate(now.getDate() - 1)
+      fromDate = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        0,
+        0,
+        0,
+      )
   }
 
   return { from: formatDatetime(fromDate), to: toStr }
@@ -145,25 +152,34 @@ const RELATIVE_PRESETS = [
 
 export interface TimeRangePickerProps {
   value?: string
+  from?: string
+  to?: string
   onChange?: (val: TimeRangeValue) => void
   className?: string
 }
 
 export function TimeRangePicker({
-  value = '1d',
+  value = 'today',
+  from,
+  to,
   onChange,
   className,
 }: TimeRangePickerProps) {
   const [selectedId, setSelectedId] = React.useState(value)
   const [isCustomOpen, setIsCustomOpen] = React.useState(false)
-  const [customFrom, setCustomFrom] = React.useState('')
-  const [customTo, setCustomTo] = React.useState('')
+  const [customFrom, setCustomFrom] = React.useState(from ?? '')
+  const [customTo, setCustomTo] = React.useState(to ?? '')
 
   React.useEffect(() => {
     setSelectedId(value)
   }, [value])
 
-  // Get current active preset or custom label
+  React.useEffect(() => {
+    if (from !== undefined) setCustomFrom(from)
+    if (to !== undefined) setCustomTo(to)
+  }, [from, to])
+
+  // Active Preset
   const activePreset = React.useMemo(() => {
     const all = [...QUICK_PRESETS, ...RELATIVE_PRESETS]
     return (
@@ -176,17 +192,29 @@ export function TimeRangePicker({
   }, [selectedId])
 
   const rangeDates = React.useMemo(() => {
+    if (from && to) {
+      return { from: from.replace('T', ' '), to: to.replace('T', ' ') }
+    }
     if (selectedId === 'custom' && customFrom && customTo) {
-      return { from: customFrom, to: customTo }
+      return {
+        from: customFrom.replace('T', ' '),
+        to: customTo.replace('T', ' '),
+      }
     }
     return calculatePresetRange(selectedId)
-  }, [selectedId, customFrom, customTo])
+  }, [selectedId, from, to, customFrom, customTo])
 
   const handleSelectPreset = (id: string, label: string, badge: string) => {
     setSelectedId(id)
     setIsCustomOpen(false)
-    const { from, to } = calculatePresetRange(id)
-    onChange?.({ id, label, badge, from, to })
+    const calculated = calculatePresetRange(id)
+    onChange?.({
+      id,
+      label,
+      badge,
+      from: calculated.from,
+      to: calculated.to,
+    })
   }
 
   const handleApplyCustom = () => {
