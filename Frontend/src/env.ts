@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 export const env = createEnv({
   server: {
-    SERVER_URL: z.string().url().optional(),
+    SERVER_URL: z.string().url().default('http://localhost:8000'),
   },
 
   /**
@@ -13,16 +13,30 @@ export const env = createEnv({
   clientPrefix: 'VITE_',
 
   client: {
-    VITE_APP_TITLE: z.string().min(1).optional(),
-    VITE_API_URL: z.string().url(),
-    VITE_ENV: z.enum(['development', 'production']),
+    VITE_APP_TITLE: z
+      .string()
+      .min(1)
+      .default('PLMD · Aplikasi Pendeteksi Keramaian'),
+    VITE_ENV: z.enum(['development', 'production']).default('production'),
   },
 
   /**
    * What object holds the environment variables at runtime. This is usually
    * `process.env` or `import.meta.env`.
    */
-  runtimeEnv: import.meta.env,
+  runtimeEnv: {
+    SERVER_URL:
+      typeof process !== 'undefined'
+        ? process.env.SERVER_URL
+        : import.meta.env.SERVER_URL,
+    VITE_APP_TITLE:
+      (typeof process !== 'undefined'
+        ? process.env.VITE_APP_TITLE
+        : undefined) ?? import.meta.env.VITE_APP_TITLE,
+    VITE_ENV:
+      (typeof process !== 'undefined' ? process.env.VITE_ENV : undefined) ??
+      import.meta.env.VITE_ENV,
+  },
 
   /**
    * By default, this library will feed the environment variables directly to

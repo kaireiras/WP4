@@ -3,13 +3,18 @@ import { getRequest } from '@tanstack/react-start/server'
 import { parseCookie, stringifySetCookie } from 'cookie'
 import { env } from '#/env'
 
-const rawBaseUrl = (env.SERVER_URL ?? env.VITE_API_URL).replace(/\/+$/, '')
-const normalizedBaseUrl = rawBaseUrl.endsWith('/api')
-  ? rawBaseUrl
-  : `${rawBaseUrl}/api`
+export function getApiBaseUrl(): string {
+  // Jika di lingkungan server (Node.js/Nitro di dalam container), utamakan SERVER_URL dari runtime env (misal: http://backend)
+  const serverRuntimeUrl =
+    typeof process !== 'undefined' ? process.env.SERVER_URL : undefined
+
+  const baseUrl = serverRuntimeUrl ?? env.SERVER_URL
+  const rawBaseUrl = baseUrl.replace(/\/+$/, '')
+  return rawBaseUrl.endsWith('/api') ? rawBaseUrl : `${rawBaseUrl}/api`
+}
 
 export const api = axios.create({
-  baseURL: normalizedBaseUrl,
+  baseURL: getApiBaseUrl(),
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -35,6 +40,9 @@ export const api = axios.create({
 })
 
 api.interceptors.request.use((config) => {
+  // Pastikan baseURL selalu mengikuti konfigurasi runtime terbaru
+  config.baseURL = getApiBaseUrl()
+
   try {
     const request = getRequest()
     const cookieHeader = request.headers.get('cookie') ?? ''
