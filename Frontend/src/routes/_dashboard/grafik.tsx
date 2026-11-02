@@ -36,43 +36,6 @@ export const Route = createFileRoute('/_dashboard/grafik')({
       range: (typeof search.range === 'string' && search.range) || 'today',
     })
   },
-  loaderDeps: ({ search }) => ({
-    room: search.room,
-    range: search.range,
-    from: search.from,
-    to: search.to,
-    limit: search.limit,
-  }),
-  loader: async ({ context, deps }) => {
-    const bounds =
-      deps.from && deps.to
-        ? { from: deps.from, to: deps.to }
-        : calculatePresetRange(deps.range)
-
-    await context.queryClient.prefetchQuery({
-      queryKey: [
-        'history-grafik',
-        {
-          room: deps.room,
-          range: deps.range,
-          from: deps.from,
-          to: deps.to,
-          limit: deps.limit,
-        },
-      ],
-      queryFn: () =>
-        getHistoryChart({
-          data: {
-            params: {
-              room_id: deps.room === 'all' ? undefined : deps.room,
-              start: bounds.from,
-              end: bounds.to,
-              limit: deps.limit,
-            },
-          },
-        }),
-    })
-  },
   component: GrafikPage,
 })
 
@@ -83,7 +46,7 @@ function GrafikPage() {
   const getHistoryChartFn = useServerFn(getHistoryChart)
   const getDashboardOverviewFn = useServerFn(getDashboardOverview)
 
-  // Fetch History Data
+  // Fetch History Data (runs after page opens with skeleton loading)
   const historyQuery = useQuery({
     queryKey: ['history-grafik', { room, range, from, to, limit }],
     queryFn: () => {
@@ -102,14 +65,15 @@ function GrafikPage() {
     },
     refetchInterval: 30000,
     refetchIntervalInBackground: false,
-    staleTime: 15000,
+    staleTime: 1000 * 60,
+    placeholderData: (previousData) => previousData,
   })
 
   // Fetch Registered AP Rooms
   const overviewQuery = useQuery({
     queryKey: ['dashboard-overview'],
     queryFn: () => getDashboardOverviewFn(),
-    staleTime: 30000,
+    staleTime: 1000 * 60 * 2,
   })
 
   const extraRooms = useMemo(() => {

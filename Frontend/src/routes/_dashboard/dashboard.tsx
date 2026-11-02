@@ -10,12 +10,6 @@ import { normalizeOccupancyLevel } from '#/services/alertService'
 import { getDashboardOverview } from '#/services/dashboardService'
 
 export const Route = createFileRoute('/_dashboard/dashboard')({
-  loader: async ({ context }) => {
-    await context.queryClient.prefetchQuery({
-      queryKey: ['dashboard-overview'],
-      queryFn: () => getDashboardOverview(),
-    })
-  },
   component: DashboardPage,
 })
 
@@ -26,13 +20,14 @@ function DashboardPage() {
 
   const getDashboardOverviewFn = useServerFn(getDashboardOverview)
 
-  // Fetch Overview
+  // Fetch Overview (runs after page opens)
   const overviewQuery = useQuery({
     queryKey: ['dashboard-overview'],
     queryFn: () => getDashboardOverviewFn(),
     refetchInterval: 30000,
     refetchIntervalInBackground: false,
-    staleTime: 15000,
+    staleTime: 1000 * 30,
+    placeholderData: (previousData) => previousData,
   })
 
   const overviewRooms = useMemo(() => {

@@ -57,15 +57,6 @@ export const Route = createFileRoute('/_dashboard/alert')({
       range: (typeof search.range === 'string' && search.range) || 'today',
     })
   },
-  loaderDeps: ({ search }) => ({
-    status: search.status,
-  }),
-  loader: async ({ context, deps }) => {
-    await context.queryClient.prefetchQuery({
-      queryKey: ['alerts', { status: deps.status }],
-      queryFn: () => getAlerts({ data: { params: { status: deps.status } } }),
-    })
-  },
   component: AlertPage,
 })
 
@@ -77,11 +68,12 @@ function AlertPage() {
   const getAlertsFn = useServerFn(getAlerts)
   const acknowledgeAlertFn = useServerFn(acknowledgeAlert)
 
-  // Fetch Alerts
+  // Fetch Alerts (runs after page opens with skeleton loading)
   const alertsQuery = useQuery({
     queryKey: ['alerts', { status }],
     queryFn: () => getAlertsFn({ data: { params: { status } } }),
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 60,
+    placeholderData: (previousData) => previousData,
   })
 
   // Acknowledge Mutation

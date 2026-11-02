@@ -30,12 +30,6 @@ export const Route = createFileRoute('/_dashboard/ap')({
       per_page: search.per_page ?? search.perpage,
     })
   },
-  loader: async ({ context }) => {
-    await context.queryClient.prefetchQuery({
-      queryKey: ['admin-aps'],
-      queryFn: () => getAps(),
-    })
-  },
   component: ApManagementPage,
 })
 
@@ -57,11 +51,12 @@ function ApManagementPage() {
   const [editErrors, setEditErrors] = React.useState<ApFormErrors>(null)
   const [deletingAp, setDeletingAp] = React.useState<ApRecord | null>(null)
 
-  // Fetch AP list
+  // Fetch AP list (runs after page opens with skeleton loading)
   const apsQuery = useQuery({
     queryKey: ['admin-aps'],
     queryFn: () => getApsFn(),
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 60,
+    placeholderData: (previousData) => previousData,
   })
 
   // Handlers matching Fe-Voting pattern

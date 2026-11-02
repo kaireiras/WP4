@@ -25,7 +25,7 @@
 ## Arsitektur Integrasi API & State Management
 
 - Seluruh pemanggilan API backend (Laravel) wajib ditempatkan di dalam folder `Frontend/src/services/` dan dibungkus menggunakan `createServerFn` dari `@tanstack/react-start` serta Axios (`api.ts`).
-- Di tingkat halaman/komponen, gunakan TanStack Query (`useQuery`, `useMutation`) dan lakukan prefetching di `loader` route TanStack Router untuk mendukung SSR (mengikuti arsitektur Fe-Voting).
+- Di tingkat halaman/komponen, gunakan TanStack Query (`useQuery`, `useMutation`) langsung di dalam komponen halaman tanpa blocking `loader` di TanStack Router, dengan loading stage berupa Skeleton (mengikuti arsitektur Fe-Voting agar perpindahan halaman instan tanpa freeze/delay).
 - Selalu sesuaikan key mapping di frontend dengan struktur response aktual API backend (dapat diverifikasi menggunakan `curl`).
 
 ## Filter Rentang Waktu (Time Range)
