@@ -12,6 +12,7 @@ services:
         required: false
     environment:
       - NITRO_PORT=3000
+      - SERVER_URL=http://backend
     networks:
       - pmld-net
     healthcheck:
@@ -20,6 +21,92 @@ services:
       timeout: 5s
       retries: 3
       start_period: 5s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: crowd-detection-backend
+    restart: always
+    ports:
+      - "${BACKEND_PORT:-8000}:80"
+    env_file:
+      - path: ./backend/.env
+        required: false
+      - path: .env
+        required: false
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - APP_URL=${APP_URL:-http://localhost:8000}
+      - REVERB_HOST=reverb
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
+      - BROADCAST_CONNECTION=reverb
+    networks:
+      - pmld-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-s", "http://127.0.0.1/up"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  reverb:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: crowd-detection-reverb
+    restart: always
+    command: ["reverb"]
+    ports:
+      - "${REVERB_PORT:-8080}:8080"
+    env_file:
+      - path: ./backend/.env
+        required: false
+      - path: .env
+        required: false
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - REVERB_SERVER_HOST=0.0.0.0
+      - REVERB_SERVER_PORT=8080
+      - BROADCAST_CONNECTION=reverb
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - pmld-net
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 8080 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  queue:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: crowd-detection-queue
+    restart: always
+    command: ["queue"]
+    env_file:
+      - path: ./backend/.env
+        required: false
+      - path: .env
+        required: false
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - REVERB_HOST=reverb
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
+      - BROADCAST_CONNECTION=reverb
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - pmld-net
+    healthcheck:
+      disable: true
 
 networks:
   pmld-net:
