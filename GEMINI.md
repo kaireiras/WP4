@@ -17,3 +17,18 @@
   1. Jalankan `pnpm fix` (misal `pnpm --prefix Frontend fix`) untuk memformat kode secara otomatis dan menerapkan auto-fix linting ESLint & Prettier agar kode rapi.
   2. Jalankan `tsc` (misal `pnpm --prefix Frontend exec tsc --noEmit`) untuk memastikan tidak ada error tipe data TypeScript.
   3. Pastikan seluruh berkas yang dimodifikasi dalam kondisi bersih tanpa error sebelum mengakhiri respons kepada user.
+
+## Comment Rules
+
+- Komentar hanya menyertakan deskripsi ringkas dari bagian yang ada, misalnya kegunaan fungsi (function) atau bagian tata letak UI/HTML (seperti bagian kiri, header, dsb.). Hindari komentar redundan atau penjelasan yang tidak perlu.
+
+## Arsitektur Integrasi API & State Management
+
+- Seluruh pemanggilan API backend (Laravel) wajib ditempatkan di dalam folder `Frontend/src/services/` dan dibungkus menggunakan `createServerFn` dari `@tanstack/react-start` serta Axios (`api.ts`).
+- Di tingkat halaman/komponen, gunakan TanStack Query (`useQuery`, `useMutation`) dan lakukan prefetching di `loader` route TanStack Router untuk mendukung SSR (mengikuti arsitektur Fe-Voting).
+- Selalu sesuaikan key mapping di frontend dengan struktur response aktual API backend (dapat diverifikasi menggunakan `curl`).
+
+## Filter Rentang Waktu (Time Range)
+
+- Default preset rentang waktu untuk dashboard, alert, dan grafik selalu `'today'`.
+- Opsi preset rentang waktu `ALL` (Semua Waktu) tidak digunakan / dihapus.
