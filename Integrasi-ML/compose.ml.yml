@@ -1,0 +1,53 @@
+# Service tambahan untuk bagian MODEL INTEGRATION (WP-4).
+# File ini TIDAK menyentuh compose.yml milik tim — jalankan bersama-sama:
+#
+#   docker compose -f compose.yml -f compose.ml.yml up -d inference
+#
+# Service ini menjalankan `php artisan inference:daemon` (tiap 15 detik
+# minta prediksi ke service ML WP-3), lalu boleh digabung ke compose.yml
+# sendiri nanti saat merge.
+
+services:
+  inference:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: crowd-detection-inference
+    restart: always
+    command: ["artisan", "inference:daemon"]
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - APP_ENV=${APP_ENV:-production}
+      - DB_CONNECTION=${DB_CONNECTION:-mysql}
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-pmld}
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-}
+      - REVERB_HOST=reverb
+      - REVERB_PORT=8080
+      - REVERB_SCHEME=http
+      - BROADCAST_CONNECTION=reverb
+      # Service ML WP-3 (serve.py, Flask) berjalan di HOST VPS, bukan container.
+      - ML_SERVICE_URL=http://host.docker.internal:5000/predict
+      - ML_MODEL_URL=http://host.docker.internal:5000/model
+      - ML_HEALTH_URL=http://host.docker.internal:5000/health
+      # Matikan saat evaluasi WP-5: ML_FALLBACK=false
+      - ML_FALLBACK=${ML_FALLBACK:-true}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      backend:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - pmld-net
+    healthcheck:
+      disable: true
+
+networks:
+  pmld-net:
+    external: true
