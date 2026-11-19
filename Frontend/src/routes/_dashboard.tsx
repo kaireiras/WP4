@@ -5,23 +5,29 @@ import {
   useLocation,
   useNavigate,
 } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useServerFn } from '@tanstack/react-start'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { Header } from '#/components/ui/header'
 import { Sidebar, defaultNavItems } from '#/components/ui/sidebar'
 import { extractApiTime } from '#/services/alertService'
+import {
+  clearClientAuthSession,
+  getClientAuthUser,
+  getCurrentUser,
+  isClientAuthenticated,
+  logoutUser,
+  saveClientAuthSession,
+} from '#/services/authService'
 import { getDashboardOverview } from '#/services/dashboardService'
 
 export const Route = createFileRoute('/_dashboard')({
   beforeLoad: () => {
-    if (typeof window !== 'undefined') {
-      const auth = localStorage.getItem('auth_status')
-      if (auth !== 'loged in') {
-        throw redirect({
-          to: '/login',
-        })
-      }
+    if (typeof window !== 'undefined' && !isClientAuthenticated()) {
+      throw redirect({
+        to: '/login',
+      })
     }
   },
   component: DashboardLayout,
@@ -29,11 +35,14 @@ export const Route = createFileRoute('/_dashboard')({
 
 function DashboardLayout() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const location = useLocation()
 
   const getDashboardOverviewFn = useServerFn(getDashboardOverview)
+  const getCurrentUserFn = useServerFn(getCurrentUser)
+  const logoutUserFn = useServerFn(logoutUser)
 
   const syncQuery = useQuery({
     queryKey: ['dashboard-overview'],
@@ -43,20 +52,39 @@ function DashboardLayout() {
     staleTime: 15000,
   })
 
+  const userQuery = useQuery({
+    queryKey: ['auth-user'],
+    queryFn: () => getCurrentUserFn(),
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+  })
+
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const auth = localStorage.getItem('auth_status')
-      if (auth !== 'loged in') {
-        navigate({ to: '/login' })
-      }
+    if (!isClientAuthenticated()) {
+      navigate({ to: '/login' })
     }
   }, [navigate, location.pathname])
 
-  const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_status')
+  useEffect(() => {
+    if (userQuery.data) {
+      saveClientAuthSession(userQuery.data)
+    } else if (userQuery.isFetched && userQuery.data === null) {
+      clearClientAuthSession()
+      navigate({ to: '/login' })
     }
-    navigate({ to: '/login' })
+  }, [userQuery.data, userQuery.isFetched, navigate])
+
+  const handleLogout = async () => {
+    try {
+      const result = await logoutUserFn()
+      toast.success(result.message || 'Logout berhasil')
+    } catch {
+      toast.success('Logout berhasil')
+    } finally {
+      clearClientAuthSession()
+      queryClient.clear()
+      navigate({ to: '/login' })
+    }
   }
 
   useEffect(() => {
@@ -75,6 +103,10 @@ function DashboardLayout() {
     }
   }
 
+  const currentUser = userQuery.data ?? getClientAuthUser()
+  const userName = currentUser?.name ?? 'Pengguna'
+  const userEmail = currentUser?.email ?? '-'
+
   const connectionState = syncQuery.isError ? 'disconnected' : 'synced'
   const lastSyncTime = extractApiTime(syncQuery.data?.last_sync) ?? '-'
 
@@ -89,8 +121,8 @@ function DashboardLayout() {
         onSelect={() => setIsMobileOpen(false)}
         onToggle={() => setIsSidebarOpen((prev) => !prev)}
         onLogout={handleLogout}
-        userName="Fauzan Trisuladana"
-        userEmail="fauzantrisuladana@gmail.com"
+        userName={userName}
+        userEmail={userEmail}
         className="shrink-0"
       />
 
@@ -103,8 +135,8 @@ function DashboardLayout() {
           onToggleSidebar={handleToggleSidebar}
           connectionState={connectionState}
           lastSyncTime={lastSyncTime}
-          userName="Fauzan Trisuladana"
-          userEmail="fauzantrisuladana@gmail.com"
+          userName={userName}
+          userEmail={userEmail}
           onLogout={handleLogout}
           className="shrink-0"
         />

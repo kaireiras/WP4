@@ -37,6 +37,7 @@ export type HistoryChartRecord = {
   rx_rate_formatted?: string
   tx_rate_formatted?: string
   packets_per_sec?: number
+  tx_retries?: number
 }
 
 export type HistoryChartResponse = {
@@ -83,9 +84,9 @@ function getLevelValueFromStatus(level: StatusLevelType): number {
 }
 
 function deriveAggregateLevelValue(estimatedCount: number): number {
-  if (estimatedCount >= 60) return 3
-  if (estimatedCount >= 35) return 2
-  if (estimatedCount >= 15) return 1
+  if (estimatedCount > 40) return 3
+  if (estimatedCount > 25) return 2
+  if (estimatedCount > 10) return 1
   return 0
 }
 

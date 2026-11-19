@@ -1,21 +1,25 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import * as React from 'react'
+import { useServerFn } from '@tanstack/react-start'
+import { toast } from 'sonner'
 import {
-  LoginDevCard,
   LoginForm,
   LoginHero,
   LoginMobileHeader,
 } from '#/components/pages/login'
+import type { AuthFieldErrors } from '#/services/authService'
+import {
+  isClientAuthenticated,
+  loginUser,
+  saveClientAuthSession,
+} from '#/services/authService'
 
 export const Route = createFileRoute('/login')({
   beforeLoad: () => {
-    if (typeof window !== 'undefined') {
-      const auth = localStorage.getItem('auth_status')
-      if (auth === 'loged in') {
-        throw redirect({
-          to: '/dashboard',
-        })
-      }
+    if (isClientAuthenticated()) {
+      throw redirect({
+        to: '/dashboard',
+      })
     }
   },
   component: LoginPage,
@@ -23,21 +27,44 @@ export const Route = createFileRoute('/login')({
 
 function LoginPage() {
   const navigate = useNavigate()
+  const loginUserFn = useServerFn(loginUser)
+
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [fieldErrors, setFieldErrors] = React.useState<AuthFieldErrors>(null)
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
 
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const auth = localStorage.getItem('auth_status')
-      if (auth === 'loged in') {
-        navigate({ to: '/dashboard' })
-      }
+    if (isClientAuthenticated()) {
+      navigate({ to: '/dashboard' })
     }
   }, [navigate])
 
-  const handleLogin = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_status', 'loged in')
+  const handleLogin = async (payload: { email: string; password: string }) => {
+    setIsLoading(true)
+    setFieldErrors(null)
+    setErrorMessage(null)
+
+    try {
+      const result = await loginUserFn({ data: payload })
+
+      if (!result.ok) {
+        setFieldErrors(result.errors)
+        setErrorMessage(result.message)
+        toast.error(result.message)
+        return
+      }
+
+      saveClientAuthSession(result.user)
+      toast.success(result.message || 'Login berhasil')
+      navigate({ to: '/dashboard' })
+    } catch (error) {
+      const msg =
+        error instanceof Error ? error.message : 'Gagal masuk ke sistem.'
+      setErrorMessage(msg)
+      toast.error(msg)
+    } finally {
+      setIsLoading(false)
     }
-    navigate({ to: '/dashboard' })
   }
 
   return (
@@ -51,11 +78,13 @@ function LoginPage() {
           {/* Header Mobile */}
           <LoginMobileHeader />
 
-          {/* Mode Dev */}
-          <LoginDevCard onLogin={handleLogin} />
-
           {/* Form */}
-          <LoginForm onLogin={handleLogin} />
+          <LoginForm
+            onLogin={handleLogin}
+            isLoading={isLoading}
+            errors={fieldErrors}
+            errorMessage={errorMessage}
+          />
         </div>
       </section>
 
