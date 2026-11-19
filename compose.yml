@@ -1,40 +1,4 @@
 services:
-  db:
-    image: docker.io/library/mysql:latest
-    container_name: crowd-detection-mysql
-    restart: always
-    environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: ${MYSQL_ALLOW_EMPTY_PASSWORD:-yes}
-      MYSQL_DATABASE: ${DB_DATABASE:-pmld}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-}
-    volumes:
-      - pmld_mysql_data:/var/lib/mysql:Z
-    ports:
-      - "${MYSQL_HOST_PORT:-3306}:3306"
-    networks:
-      - pmld-net
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
-
-  phpmyadmin:
-    image: docker.io/phpmyadmin:latest
-    container_name: crowd-detection-phpmyadmin
-    restart: always
-    environment:
-      PMA_HOST: db
-      PMA_PORT: 3306
-    ports:
-      - "${PMA_HOST_PORT:-8081}:80"
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - pmld-net
-
   frontend:
     build:
       context: ./Frontend
@@ -77,8 +41,8 @@ services:
       - APP_ENV=${APP_ENV:-production}
       - APP_URL=${APP_URL:-http://localhost:8000}
       - DB_CONNECTION=${DB_CONNECTION:-mysql}
-      - DB_HOST=db
-      - DB_PORT=3306
+      - DB_HOST=${DB_HOST:-127.0.0.1}
+      - DB_PORT=${DB_PORT:-3306}
       - DB_DATABASE=${DB_DATABASE:-pmld}
       - DB_USERNAME=${DB_USERNAME:-root}
       - DB_PASSWORD=${DB_PASSWORD:-}
@@ -86,9 +50,6 @@ services:
       - REVERB_PORT=8080
       - REVERB_SCHEME=http
       - BROADCAST_CONNECTION=reverb
-    depends_on:
-      db:
-        condition: service_healthy
     networks:
       - pmld-net
     healthcheck:
@@ -113,8 +74,8 @@ services:
     environment:
       - APP_ENV=${APP_ENV:-production}
       - DB_CONNECTION=${DB_CONNECTION:-mysql}
-      - DB_HOST=db
-      - DB_PORT=3306
+      - DB_HOST=${DB_HOST:-127.0.0.1}
+      - DB_PORT=${DB_PORT:-3306}
       - DB_DATABASE=${DB_DATABASE:-pmld}
       - DB_USERNAME=${DB_USERNAME:-root}
       - DB_PASSWORD=${DB_PASSWORD:-}
@@ -123,8 +84,6 @@ services:
       - BROADCAST_CONNECTION=reverb
     depends_on:
       backend:
-        condition: service_healthy
-      db:
         condition: service_healthy
     networks:
       - pmld-net
@@ -148,8 +107,8 @@ services:
     environment:
       - APP_ENV=${APP_ENV:-production}
       - DB_CONNECTION=${DB_CONNECTION:-mysql}
-      - DB_HOST=db
-      - DB_PORT=3306
+      - DB_HOST=${DB_HOST:-127.0.0.1}
+      - DB_PORT=${DB_PORT:-3306}
       - DB_DATABASE=${DB_DATABASE:-pmld}
       - DB_USERNAME=${DB_USERNAME:-root}
       - DB_PASSWORD=${DB_PASSWORD:-}
@@ -160,15 +119,10 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-      db:
-        condition: service_healthy
     networks:
       - pmld-net
     healthcheck:
       disable: true
-
-volumes:
-  pmld_mysql_data:
 
 networks:
   pmld-net:
