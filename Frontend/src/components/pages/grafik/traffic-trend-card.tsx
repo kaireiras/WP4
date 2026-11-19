@@ -25,7 +25,9 @@ export function TrafficTrendCard({ data, className }: TrafficTrendCardProps) {
     ...chartData.map((d) => Math.max(d.rxRate, d.txRate)),
     100,
   )
-  const step = maxRate <= 100 ? 20 : Math.ceil(maxRate / 5 / 20) * 20
+  // Berikan headroom 10% di atas titik tertinggi agar grafik tidak mepet ke tepi atas
+  const targetMax = maxRate * 1.1
+  const step = targetMax <= 100 ? 20 : Math.ceil(targetMax / 5 / 20) * 20
   const yDomainMax = step * 5
   const yTicks = [0, step, step * 2, step * 3, step * 4, yDomainMax]
 
