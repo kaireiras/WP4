@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { Loader2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import type { FormEvent } from 'react'
 import type { ApFormErrors } from './types'
@@ -55,17 +55,22 @@ export function ApAddDialog({
     ipAddress?: string
     snmpCommunity?: string
   }>({})
+  const [showMaxCharWarning, setShowMaxCharWarning] = useState(false)
   const [internalLoading, setInternalLoading] = useState(false)
 
   const isLoading = externalIsSubmitting ?? internalLoading
   const isFormValid =
-    apId.trim() !== '' && ipAddress.trim() !== '' && snmpCommunity.trim() !== ''
+    apId.trim() !== '' &&
+    apId.trim().length <= 20 &&
+    ipAddress.trim() !== '' &&
+    snmpCommunity.trim() !== ''
 
   const resetForm = () => {
     setApId('')
     setIpAddress('')
     setSnmpCommunity('public')
     setClientErrors({})
+    setShowMaxCharWarning(false)
   }
 
   const handleSubmit = async (e: FormEvent) => {
@@ -80,6 +85,9 @@ export function ApAddDialog({
 
     if (!apId.trim()) {
       newErrors.apId = 'AP ID wajib diisi.'
+    } else if (apId.trim().length > 20) {
+      newErrors.apId = 'Maksimal 20 karakter'
+      setShowMaxCharWarning(true)
     }
 
     if (!ipAddress.trim()) {
@@ -157,7 +165,13 @@ export function ApAddDialog({
                 id="ap-id"
                 value={apId}
                 onChange={(e) => {
-                  setApId(e.target.value)
+                  const nextVal = e.target.value
+                  setApId(nextVal)
+                  if (nextVal.length > 20) {
+                    setShowMaxCharWarning(true)
+                  } else {
+                    setShowMaxCharWarning(false)
+                  }
                   if (clientErrors.apId) {
                     setClientErrors((prev) => ({ ...prev, apId: undefined }))
                   }
@@ -166,7 +180,27 @@ export function ApAddDialog({
                 className="h-12"
                 disabled={isLoading}
               />
-              {apIdError ? (
+              {showMaxCharWarning ? (
+                <div className="flex items-center justify-between text-xs text-destructive bg-destructive/10 dark:bg-destructive/20 border border-destructive/20 rounded-md px-2.5 py-1.5 transition-all">
+                  <span className="font-medium">Maksimal 20 karakter</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMaxCharWarning(false)
+                      if (clientErrors.apId) {
+                        setClientErrors((prev) => ({
+                          ...prev,
+                          apId: undefined,
+                        }))
+                      }
+                    }}
+                    className="text-destructive hover:opacity-70 p-0.5 rounded cursor-pointer transition-opacity"
+                    aria-label="Tutup pesan peringatan"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              ) : apIdError ? (
                 <p className="text-sm text-destructive">{apIdError}</p>
               ) : null}
             </div>

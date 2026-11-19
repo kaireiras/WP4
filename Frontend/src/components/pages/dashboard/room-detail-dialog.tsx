@@ -353,7 +353,6 @@ export function RoomDetailDialog({
             <MetricsGrid
               roomName={liveData.room_id}
               statusLevel={normalizeOccupancyLevel(liveData.level)}
-              estimatedPeople={`~${liveData.estimated_count} orang`}
               confidence={
                 liveData.accuracy_percent !== undefined
                   ? `${liveData.accuracy_percent}%`
