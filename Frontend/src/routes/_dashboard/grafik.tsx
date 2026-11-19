@@ -56,8 +56,9 @@ function GrafikPage() {
         data: {
           params: {
             room_id: room === 'all' ? undefined : room,
-            start: bounds.from,
-            end: bounds.to,
+            from: bounds.from,
+            to: bounds.to,
+            range: from && to ? undefined : range,
             limit,
           },
         },
