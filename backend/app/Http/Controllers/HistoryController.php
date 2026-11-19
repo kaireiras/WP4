@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 class HistoryController extends Controller
 {
     /**
-     * Mengambil deret waktu riwayat trafik dan perangkat aktif dari client_snapshot
+     * Mengambil deret waktu riwayat trafik dan perangkat aktif dari vap_snapshot
      */
     public function getGrafik(Request $request): JsonResponse
     {
@@ -20,53 +20,55 @@ class HistoryController extends Controller
         $apId = $request->query('ap_id');
         $intervalSec = 15; // Interval polling
 
-        $query = DB::table('client_snapshot as cs')
-            ->leftJoin('ap_rooms as ar', 'cs.ap_id', '=', 'ar.ap_id');
+        $query = DB::table('vap_snapshot as vs')
+            ->where('vs.vap_up', 1);
 
         $isFiltered = false;
 
-        // Filter jika memilih room_id tertentu
+        // Filter berdasarkan room_id (ekstrak dari suffix ap_id, misal AP1-CU205 -> CU205)
         if (!empty($roomId) && strtoupper($roomId) !== 'ALL') {
-            $query->where('ar.room_id', $roomId);
+            $query->whereRaw("SUBSTRING_INDEX(vs.ap_id, '-', -1) = ?", [$roomId]);
             $isFiltered = true;
         }
 
         // Filter jika memilih ap_id tertentu
         if (!empty($apId)) {
-            $query->where('cs.ap_id', $apId);
+            $query->where('vs.ap_id', $apId);
             $isFiltered = true;
         }
 
         if ($isFiltered) {
             // Mode per Ruangan / AP Tertentu
             $data = $query->select([
-                    'cs.ts',
-                    'cs.ap_id',
-                    DB::raw('COALESCE(ar.room_id, "UNKNOWN") as room_id'),
-                    DB::raw('COUNT(DISTINCT cs.mac_hash) as active_clients'),
-                    DB::raw('COALESCE(SUM(cs.rx_bytes), 0) as total_rx_bytes'),
-                    DB::raw('COALESCE(SUM(cs.tx_bytes), 0) as total_tx_bytes'),
-                    DB::raw('COALESCE(SUM(cs.rx_packets), 0) as total_rx_packets'),
-                    DB::raw('COALESCE(SUM(cs.tx_packets), 0) as total_tx_packets'),
+                    'vs.ts',
+                    'vs.ap_id',
+                    DB::raw("SUBSTRING_INDEX(vs.ap_id, '-', -1) as room_id"),
+                    DB::raw('COALESCE(SUM(vs.n_clients), 0) as active_clients'),
+                    DB::raw('COALESCE(SUM(vs.rx_bytes), 0) as total_rx_bytes'),
+                    DB::raw('COALESCE(SUM(vs.tx_bytes), 0) as total_tx_bytes'),
+                    DB::raw('COALESCE(SUM(vs.rx_packets), 0) as total_rx_packets'),
+                    DB::raw('COALESCE(SUM(vs.tx_packets), 0) as total_tx_packets'),
+                    DB::raw('COALESCE(SUM(vs.tx_retries), 0) as total_tx_retries'),
                 ])
-                ->groupBy('cs.ts', 'cs.ap_id', 'ar.room_id')
-                ->orderBy('cs.ts', 'desc')
+                ->groupBy('vs.ts', 'vs.ap_id')
+                ->orderBy('vs.ts', 'desc')
                 ->limit(100)
                 ->get();
         } else {
             // Mode Agregasi Total Seluruh Gedung ("ALL")
             $data = $query->select([
-                    'cs.ts',
+                    'vs.ts',
                     DB::raw('"ALL" as ap_id'),
                     DB::raw('"ALL" as room_id'),
-                    DB::raw('COUNT(DISTINCT cs.mac_hash) as active_clients'),
-                    DB::raw('COALESCE(SUM(cs.rx_bytes), 0) as total_rx_bytes'),
-                    DB::raw('COALESCE(SUM(cs.tx_bytes), 0) as total_tx_bytes'),
-                    DB::raw('COALESCE(SUM(cs.rx_packets), 0) as total_rx_packets'),
-                    DB::raw('COALESCE(SUM(cs.tx_packets), 0) as total_tx_packets'),
+                    DB::raw('COALESCE(SUM(vs.n_clients), 0) as active_clients'),
+                    DB::raw('COALESCE(SUM(vs.rx_bytes), 0) as total_rx_bytes'),
+                    DB::raw('COALESCE(SUM(vs.tx_bytes), 0) as total_tx_bytes'),
+                    DB::raw('COALESCE(SUM(vs.rx_packets), 0) as total_rx_packets'),
+                    DB::raw('COALESCE(SUM(vs.tx_packets), 0) as total_tx_packets'),
+                    DB::raw('COALESCE(SUM(vs.tx_retries), 0) as total_tx_retries'),
                 ])
-                ->groupBy('cs.ts')
-                ->orderBy('cs.ts', 'desc')
+                ->groupBy('vs.ts')
+                ->orderBy('vs.ts', 'desc')
                 ->limit(100)
                 ->get();
         }
@@ -91,12 +93,13 @@ class HistoryController extends Controller
                 'rx_rate_formatted' => $rxRateKBs >= 1024 ? round($rxRateKBs / 1024, 2) . ' MB/s' : $rxRateKBs . ' KB/s',
                 'tx_rate_formatted' => $txRateKBs >= 1024 ? round($txRateKBs / 1024, 2) . ' MB/s' : $txRateKBs . ' KB/s',
                 'packets_per_sec'   => $pps,
+                'tx_retries'        => (int) $row->total_tx_retries,
             ];
         })->reverse()->values();
 
         return response()->json([
             'success'   => true,
-            'message'   => 'Data grafik berhasil diambil langsung dari client_snapshot.',
+            'message'   => 'Data grafik berhasil diambil langsung dari vap_snapshot.',
             'filter'    => [
                 'room_id' => $roomId ?? 'ALL',
                 'ap_id'   => $apId ?? 'ALL',
