@@ -4,19 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-/**
- * Adaptasi tabel occupancy_predictions untuk MVP TANPA Machine Learning.
- *
- * Perubahan:
- *   1. level: enum ditambah 'ERROR' dan 'UNKNOWN' —
- *      untuk polling gagal (poll_ok = FALSE) sesuai dokumen MVP.
- *   2. confidence: dibuat NULL (warisan ML, tidak dipakai lagi).
- *   3. model_version_id: FK `1` dilepas + kolom dibuat NULL
- *      (tanpa ML tidak ada versi model).
- *
- * Tabel occupancy_predictions dibuat lewat dump net_monitoring_db.sql,
- * bukan lewat migrasi, sehingga migrasi ini hanya berjalan bila tabel ada.
- */
 return new class extends Migration
 {
     public function up(): void
@@ -34,8 +21,23 @@ return new class extends Migration
             'ALTER TABLE `occupancy_predictions` MODIFY `confidence` DECIMAL(4,3) NULL'
         );
 
-        Schema::table('occupancy_predictions', function ($table) {
-            $table->dropForeign('1');
+        // Cek apakah foreign key bernama '1' atau 'occupancy_predictions_model_version_id_foreign' benar-benar ada
+        $foreignKeys = DB::select(
+            "SELECT CONSTRAINT_NAME 
+             FROM information_schema.TABLE_CONSTRAINTS 
+             WHERE TABLE_SCHEMA = DATABASE() 
+               AND TABLE_NAME = 'occupancy_predictions' 
+               AND CONSTRAINT_TYPE = 'FOREIGN KEY'"
+        );
+
+        $fkNames = array_column($foreignKeys, 'CONSTRAINT_NAME');
+
+        Schema::table('occupancy_predictions', function ($table) use ($fkNames) {
+            if (in_array('1', $fkNames, true)) {
+                $table->dropForeign('1');
+            } elseif (in_array('occupancy_predictions_model_version_id_foreign', $fkNames, true)) {
+                $table->dropForeign('occupancy_predictions_model_version_id_foreign');
+            }
         });
 
         DB::statement(
@@ -61,9 +63,5 @@ return new class extends Migration
         DB::statement(
             'ALTER TABLE `occupancy_predictions` MODIFY `model_version_id` INT NOT NULL'
         );
-
-        Schema::table('occupancy_predictions', function ($table) {
-            $table->foreign('model_version_id', '1')->references('id')->on('model_versions');
-        });
     }
 };

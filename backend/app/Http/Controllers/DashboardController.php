@@ -4,158 +4,128 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Alert;
-use App\Models\ApRoom;
+use App\Models\ApRegistry;
 use App\Models\OccupancyPrediction;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
     /**
-     * 1. Overview Denah: Status okupansi snapshot terbaru seluruh ruangan ber-AP
+     * Endpoint Overview Dashboard (/api/v1/dashboard/overview)
      */
     public function getOverview(): JsonResponse
     {
-        // Gunakan Model OccupancyPrediction untuk mencari timestamp terbaru
-        $latestTs = OccupancyPrediction::max('ts');
+        $latestTs = OccupancyPrediction::max('ts') ?? now()->toDateTimeString();
 
-        $rooms = [];
-        if ($latestTs) {
-            $rooms = ApRoom::query()
-                ->leftJoin('occupancy_predictions as op', function ($join) use ($latestTs) {
-                    $join->on('ap_rooms.room_id', '=', 'op.room_id')
-                         ->where('op.ts', '=', $latestTs);
-                })
-                ->select([
-                    'ap_rooms.room_id',
-                    'ap_rooms.ap_id',
-                    DB::raw('COALESCE(op.level, "LOW") as level'),
-                    DB::raw('COALESCE(op.estimated_count, 0) as estimated_count'),
-                    DB::raw('COALESCE(op.confidence, 0.90) as confidence'),
-                    DB::raw('COALESCE(op.ts, "'.$latestTs.'") as last_sync'),
-                ])
-                ->get();
-        }
+        $rooms = DB::table('ap_registry as ar')
+            ->leftJoin('occupancy_predictions as op', function ($join) use ($latestTs) {
+                $join->on(
+                    DB::raw('ar.ap_id COLLATE utf8mb4_unicode_ci'),
+                    '=',
+                    DB::raw('op.ap_id COLLATE utf8mb4_unicode_ci')
+                )->where('op.ts', '=', $latestTs);
+            })
+            ->select([
+                DB::raw("SUBSTRING_INDEX(ar.ap_id, '-', -1) as room_id"),
+                'ar.ap_id',
+                DB::raw('COALESCE(op.level, "UNKNOWN") as level'),
+                DB::raw('COALESCE(op.estimated_count, 0) as estimated_count'),
+                DB::raw('COALESCE(op.ts, "' . $latestTs . '") as last_sync'),
+            ])
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'room_id'         => $row->room_id,
+                    'ap_id'           => $row->ap_id,
+                    'level'           => $row->level,
+                    'estimated_count' => (int) $row->estimated_count,
+                    'last_sync'       => $row->last_sync,
+                ];
+            });
 
-        // Gunakan Model Alert untuk mengambil alert yang aktif
         $activeAlerts = Alert::where('status', 'ACTIVE')
-            ->orderBy('triggered_at', 'desc')
+            ->orderByDesc('triggered_at')
             ->get();
 
         return response()->json([
-            'success' => true,
-            'message' => 'Data overview dashboard berhasil diambil.',
-            'last_sync' => $latestTs,
-            'data' => [
-                'rooms' => $rooms,
-                'active_alerts' => $activeAlerts,
-            ],
+            'success'       => true,
+            'last_sync'     => $latestTs,
+            'total_rooms'   => $rooms->count(),
+            'total_clients' => $rooms->sum('estimated_count'),
+            'active_alerts' => $activeAlerts,
+            'rooms'         => $rooms,
         ]);
     }
 
     /**
-     * 2. Detail Popup Modal Ruangan: Mengembalikan 6 metrik jaringan & okupansi
+     * Endpoint Detail Live per Ruangan (/api/v1/rooms/{roomId}/live)
      */
     public function getRoomLiveDetail(string $roomId): JsonResponse
     {
-        // 1. Dapatkan ap_id dari Model ApRoom
-        $apRoom = ApRoom::where('room_id', $roomId)->first();
+        $ap = ApRegistry::where('ap_id', 'like', "%-{$roomId}")
+            ->orWhere('ap_id', $roomId)
+            ->first();
 
-        if (!$apRoom) {
+        if (! $ap) {
             return response()->json([
                 'success' => false,
-                'message' => "Ruangan {$roomId} tidak ditemukan atau tidak memiliki AP terdaftar.",
+                'message' => "Ruangan atau AP untuk '{$roomId}' tidak ditemukan di ap_registry.",
             ], 404);
         }
 
-        $apId = $apRoom->ap_id;
-
-        // 2. Ambil prediksi okupansi terkini via Model OccupancyPrediction
-        $latestPrediction = OccupancyPrediction::where('room_id', $roomId)
-            ->orderBy('ts', 'desc')
+        $latestPrediction = OccupancyPrediction::where('ap_id', $ap->ap_id)
+            ->orderByDesc('ts')
             ->first();
 
-        // 3. Ambil data polling klien aktif terkini dari poll_log
-        $latestPoll = DB::table('poll_log')
-            ->where('ap_id', $apId)
-            ->orderBy('ts', 'desc')
-            ->first();
+        $latestVapTs = DB::table('vap_snapshot')
+            ->where('ap_id', $ap->ap_id)
+            ->max('ts');
 
-        $activeTs = $latestPoll ? $latestPoll->ts : ($latestPrediction?->ts);
-
-        // 4. Hitung agregasi trafik dari client_snapshot pada timestamp aktif
-        $trafficAgg = null;
-        if ($activeTs) {
-            $trafficAgg = DB::table('client_snapshot')
-                ->where('ap_id', $apId)
-                ->where('ts', $activeTs)
+        $traffic = null;
+        if ($latestVapTs) {
+            $traffic = DB::table('vap_snapshot')
+                ->where('ap_id', $ap->ap_id)
+                ->where('ts', $latestVapTs)
+                ->where('vap_up', 1)
                 ->select([
+                    DB::raw('COALESCE(SUM(n_clients), 0) as active_clients'),
                     DB::raw('COALESCE(SUM(rx_bytes), 0) as total_rx_bytes'),
                     DB::raw('COALESCE(SUM(tx_bytes), 0) as total_tx_bytes'),
                     DB::raw('COALESCE(SUM(rx_packets), 0) as total_rx_packets'),
                     DB::raw('COALESCE(SUM(tx_packets), 0) as total_tx_packets'),
-                    DB::raw('COUNT(DISTINCT mac_hash) as unique_clients'),
+                    DB::raw('COALESCE(SUM(tx_retries), 0) as total_tx_retries'),
                 ])
                 ->first();
         }
 
-        // Interval polling SNMP adalah 15 detik
         $intervalSec = 15;
+        $rxRateKBs = $traffic ? round(((float) $traffic->total_rx_bytes) / 1024 / $intervalSec, 2) : 0.0;
+        $txRateKBs = $traffic ? round(((float) $traffic->total_tx_bytes) / 1024 / $intervalSec, 2) : 0.0;
+        $pps = $traffic ? (int) round((((float) $traffic->total_rx_packets) + ((float) $traffic->total_tx_packets)) / $intervalSec) : 0;
 
-        $rxBytes = (float) ($trafficAgg->total_rx_bytes ?? 0);
-        $txBytes = (float) ($trafficAgg->total_tx_bytes ?? 0);
-        $rxPackets = (float) ($trafficAgg->total_rx_packets ?? 0);
-        $txPackets = (float) ($trafficAgg->total_tx_packets ?? 0);
-
-        // Perhitungan 6 Metrik Kartu Popup:
-        // 1 & 2: Rate Byte
-        $rxRateKBs = round($rxBytes / 1024 / $intervalSec, 2);
-        $txRateKBs = round($txBytes / 1024 / $intervalSec, 2);
-
-        $rxRateFormatted = $rxRateKBs >= 1024 
-            ? round($rxRateKBs / 1024, 2) . ' MB/s' 
-            : $rxRateKBs . ' KB/s';
-
-        $txRateFormatted = $txRateKBs >= 1024 
-            ? round($txRateKBs / 1024, 2) . ' MB/s' 
-            : $txRateKBs . ' KB/s';
-
-        // 3: Packets per second (pps)
-        $pps = (int) round(($rxPackets + $txPackets) / $intervalSec);
-
-        // 4: Flow Count
-        $flowCount = (int) ($trafficAgg->unique_clients ?? 0);
-
-        // 5: Active Clients
-        $activeClients = (int) ($latestPoll->n_clients ?? $flowCount);
-
-        // 6: Connection Rate
-        $connectionRate = (int) round($flowCount / $intervalSec);
+        $extractedRoomId = str_contains($ap->ap_id, '-')
+            ? Str::afterLast($ap->ap_id, '-')
+            : $ap->ap_id;
 
         return response()->json([
-            'success' => true,
-            'message' => "Detail live ruangan {$roomId} berhasil diambil.",
-            'data' => [
-                'room_id' => $roomId,
-                'ap_id' => $apId,
-                'last_sync' => $activeTs,
-                'level' => $latestPrediction->level ?? 'LOW',
-                'estimated_count' => $latestPrediction->estimated_count ?? $activeClients,
-                'accuracy_percent' => isset($latestPrediction->confidence) 
-                    ? (int) round((float) $latestPrediction->confidence * 100) 
-                    : 90,
-                'metrics' => [
-                    'rx_rate' => $rxRateFormatted,
-                    'rx_rate_raw_kbs' => $rxRateKBs,
-                    'tx_rate' => $txRateFormatted,
-                    'tx_rate_raw_kbs' => $txRateKBs,
-                    'packets_per_sec' => $pps,
-                    'flow_count' => $flowCount,
-                    'active_clients' => $activeClients,
-                    'connection_rate' => $connectionRate,
-                ],
+            'success'         => true,
+            'room_id'         => $extractedRoomId,
+            'ap_id'           => $ap->ap_id,
+            'ip_address'      => $ap->ip_address,
+            'level'           => $latestPrediction->level ?? 'UNKNOWN',
+            'estimated_count' => (int) ($latestPrediction->estimated_count ?? ($traffic->active_clients ?? 0)),
+            'last_sync'       => $latestPrediction->ts ?? $latestVapTs,
+            'metrics'         => [
+                'active_clients'    => (int) ($traffic->active_clients ?? $latestPrediction->estimated_count ?? 0),
+                'rx_rate_kbs'       => $rxRateKBs,
+                'tx_rate_kbs'       => $txRateKBs,
+                'rx_rate_formatted' => $rxRateKBs >= 1024 ? round($rxRateKBs / 1024, 2) . ' MB/s' : $rxRateKBs . ' KB/s',
+                'tx_rate_formatted' => $txRateKBs >= 1024 ? round($txRateKBs / 1024, 2) . ' MB/s' : $txRateKBs . ' KB/s',
+                'packets_per_sec'   => $pps,
+                'tx_retries'        => (int) ($traffic->total_tx_retries ?? 0),
             ],
         ]);
     }

@@ -8,12 +8,12 @@ use App\Events\CrowdedAlert;
 use App\Events\OccupancyUpdated;
 use App\Models\Alert;
 use App\Models\ApRegistry;
-use App\Models\ApRoom;
 use App\Models\OccupancyPrediction;
 use App\Services\OccupancyClassifier;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Modul 2 MVP — Crowd Detection & Alert (TANPA Machine Learning).
@@ -91,8 +91,10 @@ class RunOccupancyClassification extends Command
             $pollOk
         );
 
-        $apRoom = ApRoom::where('ap_id', $apId)->first();
-        $roomId = $apRoom?->room_id;
+        // Ekstrak room_id langsung dari suffix ap_id (misal AP1-CU205 -> CU205)
+        $roomId = str_contains($apId, '-')
+            ? Str::afterLast($apId, '-')
+            : $apId;
 
         // Jika polling dengan ts ini sudah diproses sebelumnya, lewati
         // (jadwal 15 detik bisa berjalan lebih cepat daripada datangnya polling baru).
@@ -106,8 +108,6 @@ class RunOccupancyClassification extends Command
         }
 
         // 3. Simpan hasil klasifikasi ke occupancy_predictions.
-        //    Tanpa ML: confidence diisi 1.000 (tidak bermakna lagi) dan
-        //    model_version_id NULL (FK dilepas oleh migrasi adaptasi MVP).
         $occupancy = OccupancyPrediction::create([
             'ts' => $latestPoll->ts,
             'ap_id' => $apId,
