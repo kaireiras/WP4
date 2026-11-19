@@ -12,13 +12,12 @@ import { toast } from 'sonner'
 import { Header } from '#/components/ui/header'
 import { Sidebar, defaultNavItems } from '#/components/ui/sidebar'
 import { extractApiTime } from '#/services/alertService'
+import type { AuthUser } from '#/services/authService'
 import {
   clearClientAuthSession,
   getClientAuthUser,
-  getCurrentUser,
   isClientAuthenticated,
   logoutUser,
-  saveClientAuthSession,
 } from '#/services/authService'
 import { getDashboardOverview } from '#/services/dashboardService'
 
@@ -38,10 +37,12 @@ function DashboardLayout() {
   const queryClient = useQueryClient()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() =>
+    getClientAuthUser(),
+  )
   const location = useLocation()
 
   const getDashboardOverviewFn = useServerFn(getDashboardOverview)
-  const getCurrentUserFn = useServerFn(getCurrentUser)
   const logoutUserFn = useServerFn(logoutUser)
 
   const syncQuery = useQuery({
@@ -52,27 +53,13 @@ function DashboardLayout() {
     staleTime: 15000,
   })
 
-  const userQuery = useQuery({
-    queryKey: ['auth-user'],
-    queryFn: () => getCurrentUserFn(),
-    staleTime: 1000 * 60 * 5,
-    retry: false,
-  })
-
   useEffect(() => {
     if (!isClientAuthenticated()) {
-      navigate({ to: '/login' })
+      navigate({ to: '/login', replace: true })
+    } else {
+      setCurrentUser(getClientAuthUser())
     }
   }, [navigate, location.pathname])
-
-  useEffect(() => {
-    if (userQuery.data) {
-      saveClientAuthSession(userQuery.data)
-    } else if (userQuery.isFetched && userQuery.data === null) {
-      clearClientAuthSession()
-      navigate({ to: '/login' })
-    }
-  }, [userQuery.data, userQuery.isFetched, navigate])
 
   const handleLogout = async () => {
     try {
@@ -83,7 +70,7 @@ function DashboardLayout() {
     } finally {
       clearClientAuthSession()
       queryClient.clear()
-      navigate({ to: '/login' })
+      navigate({ to: '/login', replace: true })
     }
   }
 
@@ -103,7 +90,6 @@ function DashboardLayout() {
     }
   }
 
-  const currentUser = userQuery.data ?? getClientAuthUser()
   const userName = currentUser?.name ?? 'Pengguna'
   const userEmail = currentUser?.email ?? '-'
 

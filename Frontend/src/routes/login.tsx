@@ -1,5 +1,6 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import * as React from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useServerFn } from '@tanstack/react-start'
 import { toast } from 'sonner'
 import {
@@ -27,6 +28,7 @@ export const Route = createFileRoute('/login')({
 
 function LoginPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const loginUserFn = useServerFn(loginUser)
 
   const [isLoading, setIsLoading] = React.useState(false)
@@ -35,7 +37,7 @@ function LoginPage() {
 
   React.useEffect(() => {
     if (isClientAuthenticated()) {
-      navigate({ to: '/dashboard' })
+      navigate({ to: '/dashboard', replace: true })
     }
   }, [navigate])
 
@@ -54,9 +56,10 @@ function LoginPage() {
         return
       }
 
-      saveClientAuthSession(result.user)
+      saveClientAuthSession(result.user, result.token)
+      queryClient.clear()
       toast.success(result.message || 'Login berhasil')
-      navigate({ to: '/dashboard' })
+      await navigate({ to: '/dashboard', replace: true })
     } catch (error) {
       const msg =
         error instanceof Error ? error.message : 'Gagal masuk ke sistem.'

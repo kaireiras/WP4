@@ -42,6 +42,7 @@ export type AuthActionResult =
       ok: true
       message: string
       user: AuthUser
+      token?: string
     }
   | {
       ok: false
@@ -56,6 +57,7 @@ interface LaravelValidationErrorData {
 
 const AUTH_STATUS_KEY = 'auth_status'
 const AUTH_USER_KEY = 'auth_user'
+const AUTH_TOKEN_KEY = 'auth_token'
 
 // Persist token & user cookies on server
 function persistAuthCookies(token: string, user: AuthUser) {
@@ -108,16 +110,23 @@ function extractAuthFailure(
 }
 
 // Client session helpers
-export function saveClientAuthSession(user: AuthUser) {
+export function saveClientAuthSession(user: AuthUser, token?: string) {
   if (typeof window === 'undefined') return
   localStorage.setItem(AUTH_STATUS_KEY, 'loged in')
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user))
+  if (token) {
+    localStorage.setItem(AUTH_TOKEN_KEY, token)
+    document.cookie = `token=${encodeURIComponent(token)}; path=/; max-age=604800; SameSite=Lax`
+  }
 }
 
 export function clearClientAuthSession() {
   if (typeof window === 'undefined') return
   localStorage.removeItem(AUTH_STATUS_KEY)
   localStorage.removeItem(AUTH_USER_KEY)
+  localStorage.removeItem(AUTH_TOKEN_KEY)
+  document.cookie = 'token=; path=/; max-age=0; SameSite=Lax'
+  document.cookie = 'user=; path=/; max-age=0; SameSite=Lax'
 }
 
 export function getClientAuthUser(): AuthUser | null {
@@ -152,6 +161,7 @@ export const loginUser = createServerFn({ method: 'POST' })
         ok: true,
         message: response.data.message || 'Login berhasil',
         user: response.data.user,
+        token: response.data.access_token,
       }
     } catch (error) {
       return extractAuthFailure(error, 'Gagal masuk ke sistem.')
@@ -175,6 +185,7 @@ export const registerUser = createServerFn({ method: 'POST' })
         ok: true,
         message: response.data.message || 'Registrasi berhasil',
         user: response.data.user,
+        token: response.data.access_token,
       }
     } catch (error) {
       return extractAuthFailure(error, 'Gagal mendaftarkan akun.')
