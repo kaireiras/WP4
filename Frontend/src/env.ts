@@ -18,6 +18,10 @@ export const env = createEnv({
       .min(1)
       .default('PLMD · Aplikasi Pendeteksi Keramaian'),
     VITE_ENV: z.enum(['development', 'production']).default('production'),
+    VITE_REVERB_APP_KEY: z.string().min(1).default('pmld_app_key'),
+    VITE_REVERB_HOST: z.string().default('localhost'),
+    VITE_REVERB_PORT: z.coerce.number().default(9008),
+    VITE_REVERB_SCHEME: z.enum(['http', 'https']).default('http'),
   },
 
   /**
@@ -36,6 +40,22 @@ export const env = createEnv({
     VITE_ENV:
       (typeof process !== 'undefined' ? process.env.VITE_ENV : undefined) ??
       import.meta.env.VITE_ENV,
+    VITE_REVERB_APP_KEY:
+      (typeof process !== 'undefined'
+        ? process.env.VITE_REVERB_APP_KEY
+        : undefined) ?? import.meta.env.VITE_REVERB_APP_KEY,
+    VITE_REVERB_HOST:
+      (typeof process !== 'undefined'
+        ? process.env.VITE_REVERB_HOST
+        : undefined) ?? import.meta.env.VITE_REVERB_HOST,
+    VITE_REVERB_PORT:
+      (typeof process !== 'undefined'
+        ? process.env.VITE_REVERB_PORT
+        : undefined) ?? import.meta.env.VITE_REVERB_PORT,
+    VITE_REVERB_SCHEME:
+      (typeof process !== 'undefined'
+        ? process.env.VITE_REVERB_SCHEME
+        : undefined) ?? import.meta.env.VITE_REVERB_SCHEME,
   },
 
   /**

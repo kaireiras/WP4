@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Header } from '#/components/ui/header'
 import { Sidebar, defaultNavItems } from '#/components/ui/sidebar'
+import { useReverb } from '#/hooks/useReverb'
 import { extractApiTime } from '#/services/alertService'
 import type { AuthUser } from '#/services/authService'
 import {
@@ -93,8 +94,28 @@ function DashboardLayout() {
   const userName = currentUser?.name ?? 'Pengguna'
   const userEmail = currentUser?.email ?? '-'
 
-  const connectionState = syncQuery.isError ? 'disconnected' : 'synced'
-  const lastSyncTime = extractApiTime(syncQuery.data?.last_sync) ?? '-'
+  const reverb = useReverb()
+  const connectionState =
+    reverb.connectionState === 'connected'
+      ? 'connected'
+      : syncQuery.isError ||
+          reverb.connectionState === 'disconnected' ||
+          reverb.connectionState === 'failed' ||
+          reverb.connectionState === 'unavailable'
+        ? 'disconnected'
+        : 'synced'
+
+  const connectionLabel =
+    reverb.connectionState === 'connected'
+      ? 'Live (Reverb)'
+      : reverb.connectionState === 'connecting'
+        ? 'Menghubungkan...'
+        : syncQuery.isError
+          ? 'Terputus'
+          : 'Polling'
+
+  const lastSyncTime =
+    reverb.lastSyncTime || extractApiTime(syncQuery.data?.last_sync) || '-'
 
   return (
     <div className="flex h-screen h-dvh w-screen overflow-hidden bg-neutral-n20/60 dark:bg-neutral-n900 font-sans antialiased text-neutral-n900">
@@ -120,6 +141,7 @@ function DashboardLayout() {
           breadcrumbs={[activeNav.label]}
           onToggleSidebar={handleToggleSidebar}
           connectionState={connectionState}
+          connectionLabel={connectionLabel}
           lastSyncTime={lastSyncTime}
           userName={userName}
           userEmail={userEmail}
