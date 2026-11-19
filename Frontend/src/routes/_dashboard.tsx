@@ -1,23 +1,33 @@
 import {
-  createFileRoute,
   Outlet,
+  createFileRoute,
   redirect,
   useLocation,
   useNavigate,
 } from '@tanstack/react-router'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useServerFn } from '@tanstack/react-start'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { Header } from '#/components/ui/header'
 import { Sidebar, defaultNavItems } from '#/components/ui/sidebar'
+import { useReverb } from '#/hooks/useReverb'
+import { extractApiTime } from '#/services/alertService'
+import type { AuthUser } from '#/services/authService'
+import {
+  clearClientAuthSession,
+  getClientAuthUser,
+  isClientAuthenticated,
+  logoutUser,
+} from '#/services/authService'
+import { getDashboardOverview } from '#/services/dashboardService'
 
 export const Route = createFileRoute('/_dashboard')({
   beforeLoad: () => {
-    if (typeof window !== 'undefined') {
-      const auth = localStorage.getItem('auth_status')
-      if (auth !== 'loged in') {
-        throw redirect({
-          to: '/login',
-        })
-      }
+    if (typeof window !== 'undefined' && !isClientAuthenticated()) {
+      throw redirect({
+        to: '/login',
+      })
     }
   },
   component: DashboardLayout,
@@ -25,24 +35,44 @@ export const Route = createFileRoute('/_dashboard')({
 
 function DashboardLayout() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() =>
+    getClientAuthUser(),
+  )
   const location = useLocation()
 
+  const getDashboardOverviewFn = useServerFn(getDashboardOverview)
+  const logoutUserFn = useServerFn(logoutUser)
+
+  const syncQuery = useQuery({
+    queryKey: ['dashboard-overview'],
+    queryFn: () => getDashboardOverviewFn(),
+    refetchInterval: 30000,
+    refetchIntervalInBackground: false,
+    staleTime: 15000,
+  })
+
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const auth = localStorage.getItem('auth_status')
-      if (auth !== 'loged in') {
-        navigate({ to: '/login' })
-      }
+    if (!isClientAuthenticated()) {
+      navigate({ to: '/login', replace: true })
+    } else {
+      setCurrentUser(getClientAuthUser())
     }
   }, [navigate, location.pathname])
 
-  const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_status')
+  const handleLogout = async () => {
+    try {
+      const result = await logoutUserFn()
+      toast.success(result.message || 'Logout berhasil')
+    } catch {
+      toast.success('Logout berhasil')
+    } finally {
+      clearClientAuthSession()
+      queryClient.clear()
+      navigate({ to: '/login', replace: true })
     }
-    navigate({ to: '/login' })
   }
 
   useEffect(() => {
@@ -61,6 +91,32 @@ function DashboardLayout() {
     }
   }
 
+  const userName = currentUser?.name ?? 'Pengguna'
+  const userEmail = currentUser?.email ?? '-'
+
+  const reverb = useReverb()
+  const connectionState =
+    reverb.connectionState === 'connected'
+      ? 'connected'
+      : syncQuery.isError ||
+          reverb.connectionState === 'disconnected' ||
+          reverb.connectionState === 'failed' ||
+          reverb.connectionState === 'unavailable'
+        ? 'disconnected'
+        : 'synced'
+
+  const connectionLabel =
+    reverb.connectionState === 'connected'
+      ? 'Live (Reverb)'
+      : reverb.connectionState === 'connecting'
+        ? 'Menghubungkan...'
+        : syncQuery.isError
+          ? 'Terputus'
+          : 'Polling'
+
+  const lastSyncTime =
+    reverb.lastSyncTime || extractApiTime(syncQuery.data?.last_sync) || '-'
+
   return (
     <div className="flex h-screen h-dvh w-screen overflow-hidden bg-neutral-n20/60 dark:bg-neutral-n900 font-sans antialiased text-neutral-n900">
       {/* Sidebar */}
@@ -72,8 +128,8 @@ function DashboardLayout() {
         onSelect={() => setIsMobileOpen(false)}
         onToggle={() => setIsSidebarOpen((prev) => !prev)}
         onLogout={handleLogout}
-        userName="Fauzan Trisuladana"
-        userEmail="fauzantrisuladana@gmail.com"
+        userName={userName}
+        userEmail={userEmail}
         className="shrink-0"
       />
 
@@ -84,10 +140,11 @@ function DashboardLayout() {
           title={activeNav.label}
           breadcrumbs={[activeNav.label]}
           onToggleSidebar={handleToggleSidebar}
-          connectionState="synced"
-          lastSyncTime="12:09:15"
-          userName="Fauzan Trisuladana"
-          userEmail="fauzantrisuladana@gmail.com"
+          connectionState={connectionState}
+          connectionLabel={connectionLabel}
+          lastSyncTime={lastSyncTime}
+          userName={userName}
+          userEmail={userEmail}
           onLogout={handleLogout}
           className="shrink-0"
         />

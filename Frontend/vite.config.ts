@@ -8,7 +8,19 @@ import tailwindcss from '@tailwindcss/vite'
 import { nitro } from 'nitro/vite'
 
 const config = defineConfig({
-  resolve: { tsconfigPaths: true },
+  resolve: {
+    tsconfigPaths: true,
+    dedupe: ['react', 'react-dom'],
+  },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-dom/client',
+      'react/jsx-runtime',
+      '@tanstack/react-query',
+    ],
+  },
   plugins: [
     devtools(),
     nitro({ rollupConfig: { external: [/^@sentry\//] } }),

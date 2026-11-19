@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Check, ChevronDown, DoorOpen } from 'lucide-react'
-import { MONITORED_ROOM_IDS, parseRoomLocation } from './denah'
+import { MONITORED_ROOM_IDS } from './denah'
+import { resolveRoomDisplayLocation } from '#/services/alertService'
 import { cn } from '#/lib/utils'
 import {
   DropdownMenu,
@@ -18,13 +19,10 @@ export interface RoomOption {
   wing?: string
 }
 
-/**
- * Daftar opsi ruangan yang diturunkan langsung dari fungsi parseRoomLocation di denah.tsx
- */
-export const ROOM_OPTIONS: RoomOption[] = [
+export const ROOM_OPTIONS: Array<RoomOption> = [
   { id: 'all', name: 'Semua Ruangan', building: 'Seluruh Gedung' },
   ...MONITORED_ROOM_IDS.map((id) => {
-    const loc = parseRoomLocation(id)
+    const loc = resolveRoomDisplayLocation(id)
     return {
       id,
       name: id,
@@ -37,12 +35,14 @@ export const ROOM_OPTIONS: RoomOption[] = [
 export interface RoomPickerProps {
   value?: string
   onChange?: (roomId: string) => void
+  extraRooms?: Array<string>
   className?: string
 }
 
 export function RoomPicker({
   value = 'all',
   onChange,
+  extraRooms = [],
   className,
 }: RoomPickerProps) {
   const [selectedId, setSelectedId] = React.useState(value)
@@ -51,19 +51,45 @@ export function RoomPicker({
     setSelectedId(value)
   }, [value])
 
+  const allOptions = React.useMemo<Array<RoomOption>>(() => {
+    const dynamicExtras: Array<RoomOption> = []
+    const existingIds = new Set(ROOM_OPTIONS.map((r) => r.id))
+
+    extraRooms.forEach((rawId) => {
+      const id = rawId.trim()
+      if (!id || existingIds.has(id)) return
+      existingIds.add(id)
+
+      const loc = resolveRoomDisplayLocation(id)
+      dynamicExtras.push({
+        id,
+        name: id,
+        building: loc.buildingName,
+        wing: loc.wingName,
+      })
+    })
+
+    return [...ROOM_OPTIONS, ...dynamicExtras]
+  }, [extraRooms])
+
   const currentRoom = React.useMemo(() => {
-    return ROOM_OPTIONS.find((r) => r.id === selectedId) || ROOM_OPTIONS[0]
-  }, [selectedId])
+    return (
+      allOptions.find((r) => r.id === selectedId) ?? {
+        id: selectedId,
+        name: selectedId === 'all' ? 'Semua Ruangan' : selectedId,
+        building: 'Ruangan AP Terdaftar',
+      }
+    )
+  }, [allOptions, selectedId])
 
   const handleSelect = (id: string) => {
     setSelectedId(id)
     onChange?.(id)
   }
 
-  // Kelompokkan ruangan berdasarkan nama gedung secara dinamis dari denah
   const groupedBuildings = React.useMemo(() => {
-    const list = ROOM_OPTIONS.filter((r) => r.id !== 'all')
-    const map = new Map<string, RoomOption[]>()
+    const list = allOptions.filter((r) => r.id !== 'all')
+    const map = new Map<string, Array<RoomOption>>()
     for (const r of list) {
       if (!map.has(r.building)) {
         map.set(r.building, [])
@@ -71,7 +97,7 @@ export function RoomPicker({
       map.get(r.building)?.push(r)
     }
     return Array.from(map.entries())
-  }, [])
+  }, [allOptions])
 
   return (
     <DropdownMenu modal={false}>
@@ -84,7 +110,7 @@ export function RoomPicker({
           )}
           aria-label="Pilih ruangan"
         >
-          {/* Badge Icon & Room Name */}
+          {/* Room Name */}
           <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-n900 dark:text-neutral-n100 whitespace-nowrap">
             <DoorOpen className="size-3.5 text-slate-500 shrink-0" />
             <span className="font-bold">{currentRoom.name}</span>
@@ -104,7 +130,7 @@ export function RoomPicker({
         align="start"
         className="w-64 max-h-[80vh] overflow-y-auto bg-white dark:bg-neutral-n800 border border-neutral-n40 dark:border-neutral-n700 shadow-xl rounded-xl p-1.5 z-50"
       >
-        {/* Pilihan Semua Ruangan */}
+        {/* All Rooms Option */}
         <DropdownMenuItem
           onClick={() => handleSelect('all')}
           className={cn(
@@ -124,7 +150,7 @@ export function RoomPicker({
           )}
         </DropdownMenuItem>
 
-        {/* Grup Ruangan per Gedung sesuai Denah */}
+        {/* Grouped Rooms */}
         {groupedBuildings.map(([buildingName, rooms]) => (
           <React.Fragment key={buildingName}>
             <DropdownMenuSeparator className="my-1.5" />
@@ -145,7 +171,7 @@ export function RoomPicker({
                     )}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="inline-block w-14 text-center text-[11px] font-mono font-semibold py-0.5 rounded bg-neutral-n20 dark:bg-neutral-n700 text-neutral-n700 dark:text-neutral-n200">
+                      <span className="inline-block min-w-14 px-1.5 text-center text-[11px] font-mono font-semibold py-0.5 rounded bg-neutral-n20 dark:bg-neutral-n700 text-neutral-n700 dark:text-neutral-n200">
                         {room.name}
                       </span>
                       <span className="text-neutral-500 text-[11px]">

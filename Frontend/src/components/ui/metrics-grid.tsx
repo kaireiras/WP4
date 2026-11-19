@@ -12,7 +12,6 @@ export interface MetricItem {
   unit: string
   color?: MetricColor
   trend?: MetricTrendInput
-  delta?: string | number
 }
 
 export interface MetricsGridProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -154,8 +153,6 @@ export function MetricsGrid({
             unit={m.unit}
             color={m.color}
             trend={m.trend}
-            delta={m.delta}
-            showDelta={true}
             chartHeight="h-16"
           />
         ))}

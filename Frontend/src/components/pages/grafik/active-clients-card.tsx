@@ -16,13 +16,20 @@ export interface ActiveClientsCardProps {
 }
 
 export function ActiveClientsCard({ data, className }: ActiveClientsCardProps) {
-  // Max client count for dynamic Y-axis upper bound
-  const maxClient = Math.max(...data.map((d) => d.clients), 100)
-  const yDomainMax = maxClient > 120 ? 150 : 120
+  const chartData = data.map((item, idx) => ({
+    ...item,
+    pointKey: item.pointKey ?? String(idx),
+  }))
+
+  const rawMax = Math.max(...chartData.map((d) => d.clients), 0)
+  // Berikan headroom 10% di atas titik tertinggi agar grafik tidak mepet ke tepi atas
+  const targetMax = Math.max(rawMax * 1.1, 100)
+  const step = targetMax <= 120 ? 20 : Math.ceil(targetMax / 5 / 10) * 10
+  const yDomainMax = targetMax <= 120 ? 120 : step * 5
   const yTicks =
-    yDomainMax === 150
-      ? [0, 30, 60, 90, 120, 150]
-      : [0, 20, 40, 60, 80, 100, 120]
+    targetMax <= 120
+      ? [0, 20, 40, 60, 80, 100, 120]
+      : [0, step, step * 2, step * 3, step * 4, yDomainMax]
 
   return (
     <div
@@ -53,7 +60,7 @@ export function ActiveClientsCard({ data, className }: ActiveClientsCardProps) {
       <div className="w-full h-64 sm:h-72 -ml-2">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
-            data={data}
+            data={chartData}
             margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
           >
             <defs>
@@ -70,10 +77,16 @@ export function ActiveClientsCard({ data, className }: ActiveClientsCardProps) {
             />
 
             <XAxis
-              dataKey="time"
+              dataKey="pointKey"
               tickLine={false}
               axisLine={{ stroke: '#cbd5e1' }}
               tick={{ fill: '#64748b', fontSize: 11 }}
+              tickFormatter={(value) => {
+                const idx = Number(value)
+                return Number.isFinite(idx) && chartData[idx]
+                  ? chartData[idx].time
+                  : String(value)
+              }}
             />
 
             <YAxis
@@ -87,14 +100,24 @@ export function ActiveClientsCard({ data, className }: ActiveClientsCardProps) {
             <Tooltip
               content={({ active, payload, label }) => {
                 if (active && payload.length) {
+                  const point = payload[0]?.payload as
+                    ActiveClientsDataPoint | undefined
+                  const displayTime =
+                    point?.fullTime ?? point?.time ?? String(label)
+
                   return (
                     <div className="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 p-2.5 rounded-lg shadow-md text-xs space-y-1">
                       <div className="font-bold text-neutral-800 dark:text-neutral-200">
-                        Waktu: {label}
+                        Waktu: {displayTime}
                       </div>
                       <div className="flex items-center gap-2 text-[#2563EB] font-semibold">
                         <span className="size-2 rounded-full bg-[#2563EB]" />
-                        <span>Klien Aktif: {payload[0]?.value} Perangkat</span>
+                        <span>
+                          Klien Aktif:{' '}
+                          {point?.isNull
+                            ? '0 Perangkat (Belum tercatat)'
+                            : `${payload[0]?.value} Perangkat`}
+                        </span>
                       </div>
                     </div>
                   )
@@ -109,6 +132,12 @@ export function ActiveClientsCard({ data, className }: ActiveClientsCardProps) {
               stroke="#2563EB"
               strokeWidth={2.5}
               fill="url(#clientsGradient)"
+              dot={
+                chartData.length <= 15
+                  ? { r: 4, strokeWidth: 2, stroke: '#2563EB', fill: '#ffffff' }
+                  : false
+              }
+              activeDot={{ r: 6, strokeWidth: 2 }}
             />
           </AreaChart>
         </ResponsiveContainer>
