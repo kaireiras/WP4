@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { AlertCircle, Calendar, Edit2, RefreshCw, Trash2 } from 'lucide-react'
+import { AlertCircle, Edit2, RefreshCw, Trash2 } from 'lucide-react'
 import { flexRender } from '@tanstack/react-table'
 import {
   getCoreRowModel,
@@ -112,16 +112,6 @@ export function ApTableCard({
           <span className="text-xs font-semibold text-neutral-n800 dark:text-neutral-n200 whitespace-nowrap">
             {row.original.snmp_community}
           </span>
-        ),
-      },
-      {
-        accessorKey: 'created_at',
-        header: 'Created At',
-        cell: ({ row }) => (
-          <div className="flex items-center gap-2 text-xs font-medium text-neutral-n800 dark:text-neutral-n200 whitespace-nowrap">
-            <Calendar className="size-3.5 text-neutral-n600 dark:text-neutral-400 shrink-0" />
-            <span>{row.original.created_at}</span>
-          </div>
         ),
       },
       {

@@ -828,21 +828,12 @@ export function Denah({
 
           <div className="flex flex-wrap items-center gap-3 text-tiny-normal text-muted-foreground">
             {selectedRoomObj ? (
-              selectedRoomObj.hasAp ? (
-                <>
-                  {selectedRoomObj.crowdCount && (
-                    <span>Estimasi: {selectedRoomObj.crowdCount}</span>
-                  )}
-                  {selectedRoomObj.confidence && (
-                    <span>Akurasi: {selectedRoomObj.confidence}</span>
-                  )}
-                </>
-              ) : (
+              !selectedRoomObj.hasAp ? (
                 <span>
                   Kepadatan tidak terpantau (ruangan tidak memiliki Access
                   Point)
                 </span>
-              )
+              ) : null
             ) : (
               <span>{selectedKosongObj?.description}</span>
             )}

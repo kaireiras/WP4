@@ -11,7 +11,7 @@ export type OverviewRoomRecord = {
   ap_id: string
   level: ApiOccupancyLevel
   estimated_count: number
-  confidence: number | string
+  confidence?: number | string | null
   last_sync: string | null
 }
 
@@ -20,33 +20,61 @@ export type DashboardOverviewData = {
   active_alerts: Array<ApiAlertRecord>
 }
 
+export type DashboardOverviewApiPayload = {
+  success: boolean
+  message?: string
+  last_sync: string | null
+  total_rooms?: number
+  total_clients?: number
+  rooms?: Array<OverviewRoomRecord>
+  active_alerts?: Array<ApiAlertRecord>
+  data?: {
+    rooms?: Array<OverviewRoomRecord>
+    active_alerts?: Array<ApiAlertRecord>
+  }
+}
+
 export type DashboardOverviewResponse = {
   success: boolean
   message: string
   last_sync: string | null
+  total_rooms: number
+  total_clients: number
   data: DashboardOverviewData
 }
 
 export type RoomLiveMetrics = {
-  rx_rate: string
-  rx_rate_raw_kbs: number
-  tx_rate: string
-  tx_rate_raw_kbs: number
-  packets_per_sec: number
-  flow_count: number
   active_clients: number
-  connection_rate: number
+  rx_rate_kbs: number
+  tx_rate_kbs: number
+  rx_rate_formatted: string
+  tx_rate_formatted: string
+  packets_per_sec: number
+  tx_retries: number
+  rx_rate?: string
+  rx_rate_raw_kbs?: number
+  tx_rate?: string
+  tx_rate_raw_kbs?: number
+  flow_count?: number
+  connection_rate?: number
 }
 
 export type RoomLiveDetailData = {
   room_id: string
   ap_id: string
+  ip_address?: string
   last_sync: string | null
   level: ApiOccupancyLevel
   estimated_count: number
-  accuracy_percent: number
+  accuracy_percent?: number
   metrics: RoomLiveMetrics
 }
+
+export type RoomLiveDetailApiPayload = {
+  success: boolean
+  message?: string
+  data?: RoomLiveDetailData
+} & Partial<RoomLiveDetailData>
 
 export type RoomLiveDetailResponse = {
   success: boolean
@@ -136,18 +164,28 @@ export function formatConfidencePercent(
 
 // Get dashboard overview
 export const getDashboardOverview = createServerFn({ method: 'GET' }).handler(
-  async () => {
+  async (): Promise<DashboardOverviewResponse> => {
     try {
-      const response = await api.get<DashboardOverviewResponse>(
+      const response = await api.get<DashboardOverviewApiPayload>(
         '/v1/dashboard/overview',
       )
+      const rawRooms = response.data.rooms ?? response.data.data?.rooms ?? []
+      const rawAlerts =
+        response.data.active_alerts ?? response.data.data?.active_alerts ?? []
+      const normalizedRooms = normalizeOverviewRooms(rawRooms)
+      const normalizedAlerts = sortAlertRecordsLatestFirst(rawAlerts)
+
       return {
-        ...response.data,
+        success: response.data.success,
+        message: response.data.message ?? 'Data dashboard berhasil diambil.',
+        last_sync: response.data.last_sync,
+        total_rooms: response.data.total_rooms ?? normalizedRooms.length,
+        total_clients:
+          response.data.total_clients ??
+          normalizedRooms.reduce((acc, r) => acc + (r.estimated_count || 0), 0),
         data: {
-          rooms: normalizeOverviewRooms(response.data.data.rooms),
-          active_alerts: sortAlertRecordsLatestFirst(
-            response.data.data.active_alerts,
-          ),
+          rooms: normalizedRooms,
+          active_alerts: normalizedAlerts,
         },
       }
     } catch (error) {
@@ -161,14 +199,41 @@ export const getRoomLiveDetail = createServerFn({ method: 'GET' })
   .validator((data: { roomId: string }) => data)
   .handler(async ({ data }): Promise<RoomLiveDetailResult> => {
     try {
-      const response = await api.get<RoomLiveDetailResponse>(
+      const response = await api.get<RoomLiveDetailApiPayload>(
         `/v1/rooms/${encodeURIComponent(data.roomId)}/live`,
       )
+      const payload = response.data
+      const detailData: RoomLiveDetailData | undefined =
+        payload.data ??
+        (payload.room_id && payload.ap_id && payload.metrics
+          ? {
+              room_id: payload.room_id,
+              ap_id: payload.ap_id,
+              ip_address: payload.ip_address,
+              last_sync: payload.last_sync ?? null,
+              level: payload.level ?? 'UNKNOWN',
+              estimated_count: payload.estimated_count ?? 0,
+              accuracy_percent: payload.accuracy_percent,
+              metrics: payload.metrics,
+            }
+          : undefined)
+
+      if (!detailData) {
+        return {
+          success: false,
+          notFound: true,
+          message:
+            payload.message ??
+            `Data live untuk ruangan ${data.roomId} tidak ditemukan.`,
+          data: null,
+        }
+      }
+
       return {
         success: true,
         notFound: false,
-        message: response.data.message,
-        data: response.data.data,
+        message: payload.message ?? 'Data live ruangan berhasil diambil.',
+        data: detailData,
       }
     } catch (error) {
       if (

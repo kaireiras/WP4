@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { TrendingDown, TrendingUp } from 'lucide-react'
 import { cn } from '#/lib/utils'
 
 export type MetricColor =
@@ -18,8 +17,6 @@ export interface MetricCardProps extends React.HTMLAttributes<HTMLDivElement> {
   unit: string
   color?: MetricColor
   trend?: MetricTrendInput
-  delta?: string | number
-  showDelta?: boolean
   chartHeight?: string
 }
 
@@ -71,8 +68,6 @@ export function MetricCard({
   unit,
   color = 'blue',
   trend = [30, 45, 38, 60, 52, 75, 68, 85],
-  delta,
-  showDelta = false,
   chartHeight = 'h-16',
   className,
   ...props
@@ -148,24 +143,6 @@ export function MetricCard({
   }
   const areaData = `${pathData} L ${lastPoint.x.toFixed(2)} ${height} L ${svgPoints[0]?.x.toFixed(2) || 0} ${height} Z`
 
-  // Calculate percentage delta if not provided
-  const computedDelta = React.useMemo(() => {
-    if (delta !== undefined) return delta
-    if (pointsData.length < 2) return null
-    const first = pointsData[0].value
-    const last = pointsData[pointsData.length - 1].value
-    if (first === 0) return null
-    const diff = Math.round(((last - first) / first) * 100)
-    return diff > 0 ? `+${diff}%` : `${diff}%`
-  }, [delta, pointsData])
-
-  const isPositive =
-    typeof computedDelta === 'string'
-      ? computedDelta.startsWith('+')
-      : typeof computedDelta === 'number'
-        ? computedDelta >= 0
-        : true
-
   const activePoint =
     hoveredIndex !== null ? svgPoints[hoveredIndex] : lastPoint
 
@@ -177,28 +154,11 @@ export function MetricCard({
       )}
       {...props}
     >
-      {/* Top Label & Delta */}
+      {/* Top Label */}
       <div className="flex items-center justify-between gap-1">
         <span className="text-tiny-medium text-neutral-n500 dark:text-neutral-n300 truncate">
           {label}
         </span>
-        {showDelta && computedDelta && (
-          <span
-            className={cn(
-              'inline-flex items-center gap-0.5 text-[10px] font-semibold px-1 rounded-xs',
-              isPositive
-                ? 'text-success-60 bg-success-10 dark:bg-success-950/40'
-                : 'text-destructive-60 bg-destructive-10 dark:bg-destructive-950/40',
-            )}
-          >
-            {isPositive ? (
-              <TrendingUp className="w-2.5 h-2.5" />
-            ) : (
-              <TrendingDown className="w-2.5 h-2.5" />
-            )}
-            <span>{computedDelta}</span>
-          </span>
-        )}
       </div>
 
       {/* Main Metric Value */}

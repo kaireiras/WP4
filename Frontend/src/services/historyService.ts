@@ -18,6 +18,15 @@ export type GetHistoryParams = {
   room_id?: string
   start?: string
   end?: string
+  from?: string
+  to?: string
+  start_date?: string
+  end_date?: string
+  start_time?: string
+  end_time?: string
+  date?: string
+  range?: string
+  timeframe?: string
   limit?: number
 }
 
@@ -37,6 +46,7 @@ export type HistoryChartRecord = {
   rx_rate_formatted?: string
   tx_rate_formatted?: string
   packets_per_sec?: number
+  tx_retries?: number
 }
 
 export type HistoryChartResponse = {
@@ -83,9 +93,9 @@ function getLevelValueFromStatus(level: StatusLevelType): number {
 }
 
 function deriveAggregateLevelValue(estimatedCount: number): number {
-  if (estimatedCount >= 60) return 3
-  if (estimatedCount >= 35) return 2
-  if (estimatedCount >= 15) return 1
+  if (estimatedCount > 40) return 3
+  if (estimatedCount > 25) return 2
+  if (estimatedCount > 10) return 1
   return 0
 }
 
@@ -204,6 +214,21 @@ export const getHistoryChart = createServerFn({ method: 'GET' })
   .handler(async ({ data }) => {
     try {
       const rawParams = data?.params
+      const startVal = normalizeHistoryDateParam(
+        rawParams?.start_date ??
+          rawParams?.from ??
+          rawParams?.start_time ??
+          rawParams?.start,
+        false,
+      )
+      const endVal = normalizeHistoryDateParam(
+        rawParams?.end_date ??
+          rawParams?.to ??
+          rawParams?.end_time ??
+          rawParams?.end,
+        true,
+      )
+
       const response = await api.get<HistoryChartResponse>('/v1/grafik', {
         params: rawParams
           ? {
@@ -212,8 +237,12 @@ export const getHistoryChart = createServerFn({ method: 'GET' })
                 rawParams.room_id && rawParams.room_id !== 'all'
                   ? rawParams.room_id
                   : undefined,
-              start: normalizeHistoryDateParam(rawParams.start, false),
-              end: normalizeHistoryDateParam(rawParams.end, true),
+              start_date: startVal,
+              end_date: endVal,
+              from: startVal,
+              to: endVal,
+              date: rawParams.date,
+              range: rawParams.range ?? rawParams.timeframe,
               limit: rawParams.limit ?? 100,
             }
           : { limit: 100 },

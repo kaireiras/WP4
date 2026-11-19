@@ -7,7 +7,8 @@ import { api } from './api'
 import { handleApiError } from './errorService'
 
 // Types
-export type ApiOccupancyLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CROWDED'
+export type ApiOccupancyLevel =
+  'LOW' | 'MEDIUM' | 'HIGH' | 'CROWDED' | 'UNKNOWN' | 'ERROR'
 export type ApiAlertStatus = 'ACTIVE' | 'ACKNOWLEDGED'
 
 export type ApiAlertRecord = {

@@ -21,11 +21,13 @@ export function ActiveClientsCard({ data, className }: ActiveClientsCardProps) {
     pointKey: item.pointKey ?? String(idx),
   }))
 
-  const maxClient = Math.max(...chartData.map((d) => d.clients), 100)
-  const step = maxClient <= 120 ? 20 : Math.ceil(maxClient / 5 / 10) * 10
-  const yDomainMax = maxClient <= 120 ? 120 : step * 5
+  const rawMax = Math.max(...chartData.map((d) => d.clients), 0)
+  // Berikan headroom 10% di atas titik tertinggi agar grafik tidak mepet ke tepi atas
+  const targetMax = Math.max(rawMax * 1.1, 100)
+  const step = targetMax <= 120 ? 20 : Math.ceil(targetMax / 5 / 10) * 10
+  const yDomainMax = targetMax <= 120 ? 120 : step * 5
   const yTicks =
-    maxClient <= 120
+    targetMax <= 120
       ? [0, 20, 40, 60, 80, 100, 120]
       : [0, step, step * 2, step * 3, step * 4, yDomainMax]
 

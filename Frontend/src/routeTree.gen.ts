@@ -13,11 +13,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as DesainRouteImport } from './routes/desain'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as DashboardAlertRouteImport } from './routes/_dashboard/alert'
 import { Route as DashboardApRouteImport } from './routes/_dashboard/ap'
 import { Route as DashboardDashboardRouteImport } from './routes/_dashboard/dashboard'
 import { Route as DashboardGrafikRouteImport } from './routes/_dashboard/grafik'
-import { Route as DashboardModelRouteImport } from './routes/_dashboard/model'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -36,6 +36,11 @@ const DesainRoute = DesainRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardAlertRoute = DashboardAlertRouteImport.update({
@@ -58,31 +63,26 @@ const DashboardGrafikRoute = DashboardGrafikRouteImport.update({
   path: '/grafik',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardModelRoute = DashboardModelRouteImport.update({
-  id: '/model',
-  path: '/model',
-  getParentRoute: () => DashboardRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/desain': typeof DesainRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/alert': typeof DashboardAlertRoute
   '/ap': typeof DashboardApRoute
   '/dashboard': typeof DashboardDashboardRoute
   '/grafik': typeof DashboardGrafikRoute
-  '/model': typeof DashboardModelRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/desain': typeof DesainRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/alert': typeof DashboardAlertRoute
   '/ap': typeof DashboardApRoute
   '/dashboard': typeof DashboardDashboardRoute
   '/grafik': typeof DashboardGrafikRoute
-  '/model': typeof DashboardModelRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -90,11 +90,11 @@ export interface FileRoutesById {
   '/_dashboard': typeof DashboardRouteWithChildren
   '/desain': typeof DesainRoute
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/_dashboard/alert': typeof DashboardAlertRoute
   '/_dashboard/ap': typeof DashboardApRoute
   '/_dashboard/dashboard': typeof DashboardDashboardRoute
   '/_dashboard/grafik': typeof DashboardGrafikRoute
-  '/_dashboard/model': typeof DashboardModelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -102,32 +102,32 @@ export interface FileRouteTypes {
     | '/'
     | '/desain'
     | '/login'
+    | '/register'
     | '/alert'
     | '/ap'
     | '/dashboard'
     | '/grafik'
-    | '/model'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/desain'
     | '/login'
+    | '/register'
     | '/alert'
     | '/ap'
     | '/dashboard'
     | '/grafik'
-    | '/model'
   id:
     | '__root__'
     | '/'
     | '/_dashboard'
     | '/desain'
     | '/login'
+    | '/register'
     | '/_dashboard/alert'
     | '/_dashboard/ap'
     | '/_dashboard/dashboard'
     | '/_dashboard/grafik'
-    | '/_dashboard/model'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -135,6 +135,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   DesainRoute: typeof DesainRoute
   LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -167,6 +168,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_dashboard/alert': {
       id: '/_dashboard/alert'
       path: '/alert'
@@ -195,13 +203,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardGrafikRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/_dashboard/model': {
-      id: '/_dashboard/model'
-      path: '/model'
-      fullPath: '/model'
-      preLoaderRoute: typeof DashboardModelRouteImport
-      parentRoute: typeof DashboardRoute
-    }
   }
 }
 
@@ -210,7 +211,6 @@ interface DashboardRouteChildren {
   DashboardApRoute: typeof DashboardApRoute
   DashboardDashboardRoute: typeof DashboardDashboardRoute
   DashboardGrafikRoute: typeof DashboardGrafikRoute
-  DashboardModelRoute: typeof DashboardModelRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
@@ -218,7 +218,6 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardApRoute: DashboardApRoute,
   DashboardDashboardRoute: DashboardDashboardRoute,
   DashboardGrafikRoute: DashboardGrafikRoute,
-  DashboardModelRoute: DashboardModelRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
@@ -230,6 +229,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   DesainRoute: DesainRoute,
   LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

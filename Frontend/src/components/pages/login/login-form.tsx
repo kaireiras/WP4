@@ -1,9 +1,17 @@
 import * as React from 'react'
+import { Link } from '@tanstack/react-router'
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
+import { toast } from 'sonner'
 import { cn } from '#/lib/utils'
 
 export interface LoginFormProps {
-  onLogin: () => void
+  onLogin: (payload: {
+    email: string
+    password: string
+  }) => Promise<void> | void
+  isLoading?: boolean
+  errors?: Record<string, Array<string> | undefined> | null
+  errorMessage?: string | null
   className?: string
 }
 
@@ -30,14 +38,24 @@ function GoogleIcon({ className }: { className?: string }) {
   )
 }
 
-export function LoginForm({ onLogin, className }: LoginFormProps) {
+export function LoginForm({
+  onLogin,
+  isLoading = false,
+  errors,
+  errorMessage,
+  className,
+}: LoginFormProps) {
   const [email, setEmail] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [showPassword, setShowPassword] = React.useState(false)
 
+  const emailError = errors?.email?.[0]
+  const passwordError = errors?.password?.[0]
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onLogin()
+    if (isLoading) return
+    void onLogin({ email, password })
   }
 
   return (
@@ -57,6 +75,16 @@ export function LoginForm({ onLogin, className }: LoginFormProps) {
         </p>
       </div>
 
+      {/* General Error Banner */}
+      {errorMessage && !emailError && !passwordError && (
+        <div
+          role="alert"
+          className="mb-4 rounded-2xl bg-red-500/20 border border-red-300/40 px-4 py-3 text-xs sm:text-sm text-red-100"
+        >
+          {errorMessage}
+        </div>
+      )}
+
       {/* Form Input Fields */}
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Email Field */}
@@ -67,17 +95,25 @@ export function LoginForm({ onLogin, className }: LoginFormProps) {
           >
             Email
           </label>
-          <div className="relative h-[52px] bg-neutral-n20 dark:bg-neutral-n700 border border-neutral-n40 dark:border-neutral-n600 rounded-2xl flex items-center px-4 transition-colors focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-400/20">
+          <div
+            className={cn(
+              'relative h-[52px] bg-neutral-n20 dark:bg-neutral-n700 border border-neutral-n40 dark:border-neutral-n600 rounded-2xl flex items-center px-4 transition-colors focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-400/20',
+              emailError && 'border-red-400 focus-within:border-red-400',
+            )}
+          >
             <Mail className="size-[18px] text-neutral-n100 shrink-0 select-none mr-3" />
             <input
               id="email-input"
               type="email"
+              required
+              disabled={isLoading}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="nama@email.com"
-              className="w-full bg-transparent border-0 outline-none text-sm sm:text-base text-neutral-n700 dark:text-neutral-n10 placeholder:text-neutral-n200/60 font-normal"
+              className="w-full bg-transparent border-0 outline-none text-sm sm:text-base text-neutral-n700 dark:text-neutral-n10 placeholder:text-neutral-n200/60 font-normal disabled:opacity-60"
             />
           </div>
+          {emailError && <p className="text-xs text-red-200">{emailError}</p>}
         </div>
 
         {/* Password Field */}
@@ -92,29 +128,37 @@ export function LoginForm({ onLogin, className }: LoginFormProps) {
             <button
               type="button"
               tabIndex={-1}
-              onClick={() => alert('Fitur lupa kata sandi segera hadir')}
+              onClick={() => toast.info('Fitur lupa kata sandi segera hadir')}
               className="text-xs sm:text-sm font-normal text-tertiary-400 hover:text-tertiary-300 transition-colors cursor-pointer"
             >
               Lupa kata sandi?
             </button>
           </div>
-          <div className="relative h-[52px] bg-neutral-n20 dark:bg-neutral-n700 border border-neutral-n40 dark:border-neutral-n600 rounded-2xl flex items-center px-4 transition-colors focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-400/20">
+          <div
+            className={cn(
+              'relative h-[52px] bg-neutral-n20 dark:bg-neutral-n700 border border-neutral-n40 dark:border-neutral-n600 rounded-2xl flex items-center px-4 transition-colors focus-within:border-primary-400 focus-within:ring-2 focus-within:ring-primary-400/20',
+              passwordError && 'border-red-400 focus-within:border-red-400',
+            )}
+          >
             <Lock className="size-[18px] text-neutral-n100 shrink-0 select-none mr-3" />
             <input
               id="password-input"
               type={showPassword ? 'text' : 'password'}
+              required
+              disabled={isLoading}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Masukkan kata sandi"
-              className="w-full bg-transparent border-0 outline-none text-sm sm:text-base text-neutral-n700 dark:text-neutral-n10 placeholder:text-neutral-n200/60 font-normal pr-2"
+              className="w-full bg-transparent border-0 outline-none text-sm sm:text-base text-neutral-n700 dark:text-neutral-n10 placeholder:text-neutral-n200/60 font-normal pr-2 disabled:opacity-60"
             />
             <button
               type="button"
+              disabled={isLoading}
               onClick={() => setShowPassword((prev) => !prev)}
               aria-label={
                 showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'
               }
-              className="text-neutral-n100 hover:text-neutral-n300 transition-colors p-1 cursor-pointer"
+              className="text-neutral-n100 hover:text-neutral-n300 transition-colors p-1 cursor-pointer disabled:opacity-60"
             >
               {showPassword ? (
                 <EyeOff className="size-4 shrink-0" />
@@ -123,15 +167,19 @@ export function LoginForm({ onLogin, className }: LoginFormProps) {
               )}
             </button>
           </div>
+          {passwordError && (
+            <p className="text-xs text-red-200">{passwordError}</p>
+          )}
         </div>
 
         {/* Submit Button */}
         <div className="pt-2">
           <button
             type="submit"
-            className="w-full h-[52px] bg-tertiary-600 hover:bg-tertiary-700 active:scale-[0.99] text-white rounded-full font-semibold text-base flex items-center justify-center transition-all cursor-pointer shadow-md shadow-tertiary-600/25 select-none"
+            disabled={isLoading}
+            className="w-full h-[52px] bg-tertiary-600 hover:bg-tertiary-700 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-full font-semibold text-base flex items-center justify-center transition-all cursor-pointer shadow-md shadow-tertiary-600/25 select-none"
           >
-            Masuk
+            {isLoading ? 'Memproses...' : 'Masuk'}
           </button>
         </div>
       </form>
@@ -148,8 +196,13 @@ export function LoginForm({ onLogin, className }: LoginFormProps) {
       {/* Google Login Button */}
       <button
         type="button"
-        onClick={onLogin}
-        className="w-full h-[52px] bg-white hover:bg-neutral-n10 active:scale-[0.99] border border-neutral-n40 text-neutral-n700 rounded-full font-medium text-sm sm:text-base flex items-center justify-center gap-3 transition-all cursor-pointer shadow-xs select-none"
+        disabled={isLoading}
+        onClick={() =>
+          toast.info(
+            'Login dengan Google segera hadir. Silakan gunakan email dan kata sandi.',
+          )
+        }
+        className="w-full h-[52px] bg-white hover:bg-neutral-n10 active:scale-[0.99] disabled:opacity-60 border border-neutral-n40 text-neutral-n700 rounded-full font-medium text-sm sm:text-base flex items-center justify-center gap-3 transition-all cursor-pointer shadow-xs select-none"
       >
         <GoogleIcon className="size-5 shrink-0" />
         <span>Masuk dengan Google</span>
@@ -158,17 +211,12 @@ export function LoginForm({ onLogin, className }: LoginFormProps) {
       {/* Footer */}
       <div className="mt-8 text-center text-xs sm:text-sm text-neutral-n30 select-none">
         <span>Belum punya akun? </span>
-        <button
-          type="button"
-          onClick={() =>
-            alert(
-              'Pendaftaran akun baru saat ini dilakukan melalui administrator.',
-            )
-          }
+        <Link
+          to="/register"
           className="font-semibold text-tertiary-400 hover:text-tertiary-300 transition-colors cursor-pointer"
         >
           Daftar sekarang
-        </button>
+        </Link>
       </div>
     </div>
   )

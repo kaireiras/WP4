@@ -109,14 +109,15 @@ export function RoomDetailDialog({
   const metrics = useMemo<Array<MetricItem>>(() => {
     if (!liveData) return []
 
-    const rx = splitFormattedRate(
-      liveData.metrics.rx_rate,
-      liveData.metrics.rx_rate_raw_kbs,
-    )
-    const tx = splitFormattedRate(
-      liveData.metrics.tx_rate,
-      liveData.metrics.tx_rate_raw_kbs,
-    )
+    const rxFormatted =
+      liveData.metrics.rx_rate_formatted || liveData.metrics.rx_rate || '0 KB/s'
+    const rxRawKbs = liveData.metrics.rx_rate_kbs
+    const txFormatted =
+      liveData.metrics.tx_rate_formatted || liveData.metrics.tx_rate || '0 KB/s'
+    const txRawKbs = liveData.metrics.tx_rate_kbs
+
+    const rx = splitFormattedRate(rxFormatted, rxRawKbs)
+    const tx = splitFormattedRate(txFormatted, txRawKbs)
     const syncDateTime = formatApiDateTime(liveData.last_sync)
     const syncTime = extractApiTime(liveData.last_sync)
 
@@ -127,7 +128,7 @@ export function RoomDetailDialog({
     const isTxMb = tx.unit.toUpperCase() === 'MB/S'
 
     const rxHistoryPoints: Array<TrendPoint> = historyRecords.map((item) => {
-      const raw = Number(item.rx_rate ?? 0)
+      const raw = Number(item.rx_rate_kbs ?? item.rx_rate ?? 0)
       const scaled = isRxMb
         ? Number((raw / 1024).toFixed(2))
         : Number(raw.toFixed(2))
@@ -138,7 +139,7 @@ export function RoomDetailDialog({
     })
 
     const txHistoryPoints: Array<TrendPoint> = historyRecords.map((item) => {
-      const raw = Number(item.tx_rate ?? 0)
+      const raw = Number(item.tx_rate_kbs ?? item.tx_rate ?? 0)
       const scaled = isTxMb
         ? Number((raw / 1024).toFixed(2))
         : Number(raw.toFixed(2))
@@ -148,10 +149,28 @@ export function RoomDetailDialog({
       }
     })
 
+    const ppsHistoryPoints: Array<TrendPoint> = historyRecords.map((item) => {
+      const raw = Number(item.packets_per_sec ?? 0)
+      return {
+        time: extractApiTime(item.ts),
+        value: Number.isFinite(raw) ? raw : 0,
+      }
+    })
+
+    const retriesHistoryPoints: Array<TrendPoint> = historyRecords.map(
+      (item) => {
+        const raw = Number(item.tx_retries ?? 0)
+        return {
+          time: extractApiTime(item.ts),
+          value: Number.isFinite(raw) ? raw : 0,
+        }
+      },
+    )
+
     const clientsHistoryPoints: Array<TrendPoint> = historyRecords
-      .filter((item) => item.n_clients !== null)
+      .filter((item) => (item.active_clients ?? item.n_clients) !== null)
       .map((item) => {
-        const raw = Number(item.n_clients)
+        const raw = Number(item.active_clients ?? item.n_clients)
         return {
           time: extractApiTime(item.ts),
           value: Number.isFinite(raw) ? raw : 0,
@@ -175,6 +194,14 @@ export function RoomDetailDialog({
         time: syncTime,
         value: Number(tx.value) || 0,
       })
+      ppsHistoryPoints.push({
+        time: syncTime,
+        value: liveData.metrics.packets_per_sec,
+      })
+      retriesHistoryPoints.push({
+        time: syncTime,
+        value: liveData.metrics.tx_retries,
+      })
       clientsHistoryPoints.push({
         time: syncTime,
         value: liveData.metrics.active_clients,
@@ -190,6 +217,16 @@ export function RoomDetailDialog({
       txHistoryPoints.length >= 2
         ? txHistoryPoints
         : buildFlatTrend(Number(tx.value) || 0, syncTime)
+
+    const ppsTrend: Array<TrendPoint> =
+      ppsHistoryPoints.length >= 2
+        ? ppsHistoryPoints
+        : buildFlatTrend(liveData.metrics.packets_per_sec, syncTime)
+
+    const retriesTrend: Array<TrendPoint> =
+      retriesHistoryPoints.length >= 2
+        ? retriesHistoryPoints
+        : buildFlatTrend(liveData.metrics.tx_retries, syncTime)
 
     const clientsTrend: Array<TrendPoint> =
       clientsHistoryPoints.length >= 2
@@ -216,14 +253,7 @@ export function RoomDetailDialog({
         value: liveData.metrics.packets_per_sec.toLocaleString('en-US'),
         unit: 'pps',
         color: 'purple',
-        trend: buildFlatTrend(liveData.metrics.packets_per_sec, syncTime),
-      },
-      {
-        label: 'Flow Count',
-        value: liveData.metrics.flow_count.toLocaleString('en-US'),
-        unit: 'flow',
-        color: 'orange',
-        trend: buildFlatTrend(liveData.metrics.flow_count, syncTime),
+        trend: ppsTrend,
       },
       {
         label: 'Active Clients',
@@ -233,11 +263,11 @@ export function RoomDetailDialog({
         trend: clientsTrend,
       },
       {
-        label: 'Connection Rate',
-        value: liveData.metrics.connection_rate.toLocaleString('en-US'),
-        unit: '/s',
-        color: 'green',
-        trend: buildFlatTrend(liveData.metrics.connection_rate, syncTime),
+        label: 'TX Retries',
+        value: (liveData.metrics.tx_retries || 0).toLocaleString('en-US'),
+        unit: 'retry',
+        color: 'orange',
+        trend: retriesTrend,
       },
     ]
   }, [liveData, roomHistoryQuery.data])
@@ -262,6 +292,11 @@ export function RoomDetailDialog({
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary-50 dark:bg-primary-950/50 border border-primary-200 dark:border-primary-800 text-xs font-semibold text-primary-700 dark:text-primary-300">
                 <Wifi className="size-3" />
                 <span>{liveData.ap_id}</span>
+              </span>
+            )}
+            {liveData?.ip_address && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-neutral-n20 dark:bg-neutral-n700 border border-neutral-n40 dark:border-neutral-n600 text-xs font-medium text-neutral-n600 dark:text-neutral-n200">
+                {liveData.ip_address}
               </span>
             )}
           </DialogTitle>
@@ -318,8 +353,11 @@ export function RoomDetailDialog({
             <MetricsGrid
               roomName={liveData.room_id}
               statusLevel={normalizeOccupancyLevel(liveData.level)}
-              estimatedPeople={`~${liveData.estimated_count} orang`}
-              confidence={`${liveData.accuracy_percent}%`}
+              confidence={
+                liveData.accuracy_percent !== undefined
+                  ? `${liveData.accuracy_percent}%`
+                  : undefined
+              }
               updatedAt={
                 liveData.last_sync
                   ? `Diperbarui ${formatApiDateTime(liveData.last_sync)}`

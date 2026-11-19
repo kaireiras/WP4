@@ -1,6 +1,6 @@
 import axios from 'axios'
-import { getRequest } from '@tanstack/react-start/server'
-import { parseCookie, stringifySetCookie } from 'cookie'
+import { deleteCookie, getRequest } from '@tanstack/react-start/server'
+import { parseCookie } from 'cookie'
 import { env } from '#/env'
 
 export function getApiBaseUrl(): string {
@@ -68,32 +68,12 @@ api.interceptors.response.use(
   (error: unknown) => {
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 401) {
-        const tokenCookie = stringifySetCookie({
-          name: 'token',
-          value: '',
-          httpOnly: true,
-          secure: env.VITE_ENV === 'production',
-          sameSite: 'strict',
-          path: '/',
-          maxAge: 0,
-        })
-
-        const userCookie = stringifySetCookie({
-          name: 'user',
-          value: '',
-          httpOnly: false,
-          secure: env.VITE_ENV === 'production',
-          sameSite: 'strict',
-          path: '/',
-          maxAge: 0,
-        })
-
-        return new Response(JSON.stringify({ success: true }), {
-          headers: {
-            'Set-Cookie': [tokenCookie, userCookie].join(', '),
-            'Content-Type': 'application/json',
-          },
-        })
+        try {
+          deleteCookie('token', { path: '/' })
+          deleteCookie('user', { path: '/' })
+        } catch {
+          // Response context unavailable
+        }
       }
 
       if (error.code === 'ECONNABORTED') {
