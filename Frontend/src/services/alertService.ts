@@ -9,11 +9,12 @@ import { handleApiError } from './errorService'
 // Types
 export type ApiOccupancyLevel =
   'LOW' | 'MEDIUM' | 'HIGH' | 'CROWDED' | 'UNKNOWN' | 'ERROR'
-export type ApiAlertStatus = 'ACTIVE' | 'ACKNOWLEDGED'
+export type ApiAlertStatus = 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED'
 
 export type ApiAlertRecord = {
   id: number
   triggered_at: string
+  resolved_at?: string | null
   ap_id: string
   room_id: string | null
   level: ApiOccupancyLevel
@@ -36,6 +37,14 @@ export type AcknowledgeAlertResponse = {
 
 export type GetAlertsParams = {
   status?: ApiAlertStatus
+  ap_id?: string
+  room_id?: string
+  date?: string
+  start_date?: string
+  end_date?: string
+  from?: string
+  to?: string
+  limit?: number
 }
 
 // Helpers
@@ -140,14 +149,22 @@ export function mapApiAlertToAlertItem(
   record: ApiAlertRecord,
   index: number,
 ): AlertItem {
+  const status =
+    record.status === 'RESOLVED'
+      ? 'resolved'
+      : record.status === 'ACKNOWLEDGED'
+        ? 'acknowledged'
+        : 'active'
+
   return {
     id: String(record.id),
     no: index + 1,
     timestamp: formatApiDateTime(record.triggered_at) ?? record.triggered_at,
     level: normalizeOccupancyLevel(record.level),
     estCount: `~${record.estimated_count} Orang`,
-    status: record.status === 'ACKNOWLEDGED' ? 'acknowledged' : 'active',
+    status,
     ackAt: formatApiDateTime(record.acknowledged_at),
+    resolvedAt: formatApiDateTime(record.resolved_at),
     roomName: formatAlertRoomLabel(record.room_id, record.ap_id),
   }
 }

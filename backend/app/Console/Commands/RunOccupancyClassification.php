@@ -135,16 +135,37 @@ class RunOccupancyClassification extends Command
                     'status' => 'ACTIVE',
                 ]);
 
-                broadcast(new CrowdedAlert($alert));
+                $this->safeBroadcast(new CrowdedAlert($alert));
 
                 Log::info("Alert CROWDED dibuat untuk AP {$apId} (ruangan {$roomId}): {$result['count']} client.");
                 $this->warn("AP {$apId} - CROWDED: {$result['count']} client. Alert dibuat.");
             }
+        } elseif ($result['level'] !== OccupancyClassifier::LEVEL_UNKNOWN) {
+            // Selesaikan alert ACTIVE jika kepadatan sudah kembali di bawah batas CROWDED.
+            Alert::where('ap_id', $apId)
+                ->where('level', OccupancyClassifier::LEVEL_CROWDED)
+                ->where('status', 'ACTIVE')
+                ->update([
+                    'status' => 'RESOLVED',
+                    'resolved_at' => now(),
+                ]);
         }
 
         // 5. Broadcast update okupansi ke dashboard (kanal metrics.live).
-        broadcast(new OccupancyUpdated($occupancy));
+        $this->safeBroadcast(new OccupancyUpdated($occupancy));
 
         $this->line("AP {$apId} - {$result['level']}: {$result['count']} client (poll_ok=" . ($pollOk ? 'TRUE' : 'FALSE') . ').');
+    }
+
+    /**
+     * Broadcast event ke Reverb tanpa menggagalkan penyimpanan klasifikasi/alert jika Reverb sedang mati.
+     */
+    private function safeBroadcast(object $event): void
+    {
+        try {
+            broadcast($event);
+        } catch (\Throwable $e) {
+            Log::warning('Broadcast Reverb dilewati (server tidak terjangkau): ' . $e->getMessage());
+        }
     }
 }

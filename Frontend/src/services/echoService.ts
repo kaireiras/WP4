@@ -13,6 +13,7 @@ export interface CrowdedAlertPayload {
   alert: {
     id: number
     triggered_at: string
+    resolved_at?: string | null
     ap_id: string
     room_id: string
     level: string

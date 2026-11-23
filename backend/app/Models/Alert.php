@@ -12,6 +12,7 @@ class Alert extends Model
 
     protected $fillable = [
         'triggered_at',
+        'resolved_at',
         'ap_id',
         'room_id',
         'level',
@@ -22,6 +23,7 @@ class Alert extends Model
 
     protected $casts = [
         'triggered_at' => 'datetime',
+        'resolved_at' => 'datetime',
         'acknowledged_at' => 'datetime',
         'estimated_count' => 'integer'
     ];

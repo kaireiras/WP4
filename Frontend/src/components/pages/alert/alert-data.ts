@@ -1,5 +1,5 @@
 export type AlertLevel = 'crowded' | 'high' | 'medium' | 'low'
-export type AlertStatus = 'active' | 'acknowledged'
+export type AlertStatus = 'active' | 'acknowledged' | 'resolved'
 
 export interface AlertItem {
   id: string
@@ -9,6 +9,7 @@ export interface AlertItem {
   estCount: string
   status: AlertStatus
   ackAt: string | null
+  resolvedAt?: string | null
   roomName?: string
 }
 

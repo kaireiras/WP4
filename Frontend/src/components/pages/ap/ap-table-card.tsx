@@ -115,6 +115,42 @@ export function ApTableCard({
         ),
       },
       {
+        accessorKey: 'connection_status',
+        header: 'Status',
+        cell: ({ row }) => {
+          const status = row.original.connection_status
+          const isOnline = status === 'ONLINE'
+          const isOffline = status === 'OFFLINE'
+
+          return (
+            <span
+              className={cn(
+                'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border select-none',
+                isOnline &&
+                  'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50',
+                isOffline &&
+                  'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/50',
+                !isOnline &&
+                  !isOffline &&
+                  'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700',
+              )}
+            >
+              <span
+                className={cn(
+                  'size-1.5 rounded-full',
+                  isOnline && 'bg-emerald-500 animate-pulse',
+                  isOffline && 'bg-rose-500',
+                  !isOnline && !isOffline && 'bg-neutral-400',
+                )}
+              />
+              <span>
+                {isOnline ? 'Online' : isOffline ? 'Offline' : 'Unknown'}
+              </span>
+            </span>
+          )
+        },
+      },
+      {
         id: 'action',
         header: () => <span className="text-right block pr-1">Action</span>,
         cell: ({ row }) => {
