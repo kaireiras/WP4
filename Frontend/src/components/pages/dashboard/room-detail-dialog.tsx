@@ -22,6 +22,7 @@ import { MetricsGrid } from '#/components/ui/metrics-grid'
 import type { MetricItem } from '#/components/ui/metrics-grid'
 import type { TrendPoint } from '#/components/ui/metric-card'
 import { isMonitoredRoom } from '#/components/ui/denah'
+import { cn } from '#/lib/utils'
 import {
   extractApiTime,
   formatApiDateTime,
@@ -297,6 +298,37 @@ export function RoomDetailDialog({
             {liveData?.ip_address && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-neutral-n20 dark:bg-neutral-n700 border border-neutral-n40 dark:border-neutral-n600 text-xs font-medium text-neutral-n600 dark:text-neutral-n200">
                 {liveData.ip_address}
+              </span>
+            )}
+            {liveData?.connection_status && (
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border select-none',
+                  liveData.connection_status === 'ONLINE' &&
+                    'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50',
+                  liveData.connection_status === 'OFFLINE' &&
+                    'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/50',
+                  liveData.connection_status === 'UNKNOWN' &&
+                    'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-700',
+                )}
+              >
+                <span
+                  className={cn(
+                    'size-1.5 rounded-full',
+                    liveData.connection_status === 'ONLINE' &&
+                      'bg-emerald-500 animate-pulse',
+                    liveData.connection_status === 'OFFLINE' && 'bg-rose-500',
+                    liveData.connection_status === 'UNKNOWN' &&
+                      'bg-neutral-400',
+                  )}
+                />
+                <span>
+                  {liveData.connection_status === 'ONLINE'
+                    ? 'Online'
+                    : liveData.connection_status === 'OFFLINE'
+                      ? 'Offline'
+                      : 'Unknown'}
+                </span>
               </span>
             )}
           </DialogTitle>

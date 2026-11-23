@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { createServerFn } from '@tanstack/react-start'
+import type { ApConnectionStatus } from './apService'
 import type { ApiAlertRecord, ApiOccupancyLevel } from './alertService'
 import { formatApiDateTime, sortAlertRecordsLatestFirst } from './alertService'
 import { api } from './api'
@@ -13,6 +14,9 @@ export type OverviewRoomRecord = {
   estimated_count: number
   confidence?: number | string | null
   last_sync: string | null
+  poll_ok?: boolean | null
+  connection_status?: ApConnectionStatus
+  last_poll_at?: string | null
 }
 
 export type DashboardOverviewData = {
@@ -67,6 +71,9 @@ export type RoomLiveDetailData = {
   level: ApiOccupancyLevel
   estimated_count: number
   accuracy_percent?: number
+  poll_ok?: boolean | null
+  connection_status?: ApConnectionStatus
+  last_poll_at?: string | null
   metrics: RoomLiveMetrics
 }
 

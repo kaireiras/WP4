@@ -29,7 +29,10 @@ import { cn } from '#/lib/utils'
 const alertSearchSchema = z.object({
   page: z.coerce.number().int().positive().catch(1),
   per_page: z.coerce.number().int().positive().catch(20),
-  status: z.enum(['ACTIVE', 'ACKNOWLEDGED']).optional().catch(undefined),
+  status: z
+    .enum(['ACTIVE', 'ACKNOWLEDGED', 'RESOLVED'])
+    .optional()
+    .catch(undefined),
   range: z.string().catch('today'),
   from: z.string().optional(),
   to: z.string().optional(),
@@ -42,6 +45,7 @@ const STATUS_OPTIONS: Array<{
   { value: undefined, label: 'Semua Status' },
   { value: 'ACTIVE', label: 'Active' },
   { value: 'ACKNOWLEDGED', label: 'Acknowledged' },
+  { value: 'RESOLVED', label: 'Resolved' },
 ]
 
 export const Route = createFileRoute('/_dashboard/alert')({
@@ -68,10 +72,26 @@ function AlertPage() {
   const getAlertsFn = useServerFn(getAlerts)
   const acknowledgeAlertFn = useServerFn(acknowledgeAlert)
 
+  const bounds = from && to ? { from, to } : calculatePresetRange(range)
+  const startBound = normalizeHistoryDateParam(bounds.from, false)
+  const endBound = normalizeHistoryDateParam(bounds.to, true)
+
   // Fetch Alerts (runs after page opens with skeleton loading)
   const alertsQuery = useQuery({
-    queryKey: ['alerts', { status }],
-    queryFn: () => getAlertsFn({ data: { params: { status } } }),
+    queryKey: ['alerts', { status, startBound, endBound }],
+    queryFn: () =>
+      getAlertsFn({
+        data: {
+          params: {
+            status,
+            start_date: startBound,
+            end_date: endBound,
+            from: startBound,
+            to: endBound,
+            limit: 500,
+          },
+        },
+      }),
     staleTime: 1000 * 60,
     placeholderData: (previousData) => previousData,
   })
@@ -93,10 +113,6 @@ function AlertPage() {
     const rawList = alertsQuery.data?.data ?? []
     const mapped = rawList.map((item, idx) => mapApiAlertToAlertItem(item, idx))
 
-    const bounds = from && to ? { from, to } : calculatePresetRange(range)
-    const startBound = normalizeHistoryDateParam(bounds.from, false)
-    const endBound = normalizeHistoryDateParam(bounds.to, true)
-
     return mapped
       .filter((item) => {
         if (startBound && item.timestamp < startBound) return false
@@ -107,7 +123,7 @@ function AlertPage() {
         ...item,
         no: idx + 1,
       }))
-  }, [alertsQuery.data, range, from, to])
+  }, [alertsQuery.data, startBound, endBound])
 
   const handleAcknowledge = (item: AlertItem) => {
     const numericId = Number(item.id)

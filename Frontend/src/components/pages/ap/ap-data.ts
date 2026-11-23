@@ -1,4 +1,4 @@
-import type { ApRegistryRecord } from '#/services/apService'
+import type { ApConnectionStatus, ApRegistryRecord } from '#/services/apService'
 import { formatApCreatedAt } from '#/services/apService'
 
 // Table row data structure for AP
@@ -7,6 +7,9 @@ export interface ApItem {
   ap_id: string
   ip_address: string
   snmp_community: string
+  connection_status: ApConnectionStatus
+  poll_ok: boolean | null
+  last_poll_at: string | null
   created_at: string
   rawCreatedAt?: string | null
 }
@@ -32,6 +35,9 @@ export function mapApRecordToItem(
     ap_id: record.ap_id,
     ip_address: record.ip_address,
     snmp_community: record.snmp_community,
+    connection_status: record.connection_status ?? 'UNKNOWN',
+    poll_ok: record.poll_ok ?? null,
+    last_poll_at: record.last_poll_at ?? null,
     created_at: formatApCreatedAt(record.created_at),
     rawCreatedAt: record.created_at,
   }
