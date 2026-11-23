@@ -127,17 +127,19 @@ export function AlertTableCard({
       {
         accessorKey: 'ackAt',
         header: 'Ack. At',
-        cell: ({ row }) =>
-          row.original.ackAt ? (
+        cell: ({ row }) => {
+          const displayTime = row.original.ackAt || row.original.resolvedAt
+          return displayTime ? (
             <div className="flex items-center gap-2 text-xs font-medium text-neutral-n800 dark:text-neutral-n200 whitespace-nowrap">
               <Calendar className="size-3.5 text-neutral-n600 dark:text-neutral-400 shrink-0" />
-              <span>{row.original.ackAt}</span>
+              <span>{displayTime}</span>
             </div>
           ) : (
             <span className="text-xs text-neutral-400 dark:text-neutral-500 font-mono pl-4">
               -
             </span>
-          ),
+          )
+        },
       },
       {
         id: 'action',
@@ -145,6 +147,7 @@ export function AlertTableCard({
         cell: ({ row }) => {
           const item = row.original
           const isActive = item.status === 'active'
+          const isResolved = item.status === 'resolved'
           const isProcessing = acknowledgingId === item.id
 
           return (
@@ -168,7 +171,13 @@ export function AlertTableCard({
                 ) : (
                   <>
                     <CheckCircle2 className="size-3.5 shrink-0" />
-                    <span>{isActive ? 'Acknowledge' : 'Acknowledged'}</span>
+                    <span>
+                      {isActive
+                        ? 'Acknowledge'
+                        : isResolved
+                          ? 'Resolved'
+                          : 'Acknowledged'}
+                    </span>
                   </>
                 )}
               </button>

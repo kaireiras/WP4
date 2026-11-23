@@ -3,10 +3,15 @@ import { api } from './api'
 import { handleApiError } from './errorService'
 
 // Types
+export type ApConnectionStatus = 'ONLINE' | 'OFFLINE' | 'UNKNOWN'
+
 export interface ApRegistryRecord {
   ap_id: string
   ip_address: string
   snmp_community: string
+  connection_status?: ApConnectionStatus
+  poll_ok?: boolean | null
+  last_poll_at?: string | null
   created_at?: string | null
   updated_at?: string | null
 }
@@ -21,6 +26,22 @@ export interface ApDetailResponse {
   success: boolean
   message: string
   data: ApRegistryRecord
+}
+
+export interface ApStatusData {
+  ap_id: string
+  ip_address: string
+  connection_status: ApConnectionStatus
+  poll_ok: boolean | null
+  last_poll_at: string | null
+  n_clients: number | null
+  snmp_probe_ok: boolean | null
+}
+
+export interface ApStatusResponse {
+  success: boolean
+  message: string
+  data: ApStatusData
 }
 
 export interface ApActionResponse {
@@ -73,6 +94,20 @@ export const getApDetail = createServerFn({ method: 'GET' })
     try {
       const response = await api.get<ApDetailResponse>(
         `/v1/admin/ap/${encodeURIComponent(data.apId)}`,
+      )
+      return response.data
+    } catch (error) {
+      return handleApiError(error)
+    }
+  })
+
+// Check AP real-time connectivity status
+export const checkApStatus = createServerFn({ method: 'GET' })
+  .validator((data: { apId: string }) => data)
+  .handler(async ({ data }) => {
+    try {
+      const response = await api.get<ApStatusResponse>(
+        `/v1/admin/ap/${encodeURIComponent(data.apId)}/status`,
       )
       return response.data
     } catch (error) {
