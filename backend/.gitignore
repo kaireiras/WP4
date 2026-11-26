@@ -25,3 +25,10 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+<<<<<<< HEAD
+=======
+docs
+Backend
+database_pmld.sql
+WP4
+>>>>>>> 9c51de8336b98df24af4e866e662ed686c97116b
