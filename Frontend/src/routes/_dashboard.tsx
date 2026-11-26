@@ -98,10 +98,7 @@ function DashboardLayout() {
   const connectionState =
     reverb.connectionState === 'connected'
       ? 'connected'
-      : syncQuery.isError ||
-          reverb.connectionState === 'disconnected' ||
-          reverb.connectionState === 'failed' ||
-          reverb.connectionState === 'unavailable'
+      : syncQuery.isError
         ? 'disconnected'
         : 'synced'
 

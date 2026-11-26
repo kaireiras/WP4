@@ -52,6 +52,15 @@ export type HistoryChartRecord = {
 export type HistoryChartResponse = {
   success: boolean
   message: string
+  filter?: {
+    room_id?: string
+    ap_id?: string
+    date?: string | null
+    start_date?: string | null
+    end_date?: string | null
+    range?: string | null
+    interval?: string
+  }
   data: Array<HistoryChartRecord>
 }
 
@@ -125,6 +134,12 @@ function formatChartTimeLabels(
 
   const uniqueDates = new Set(parsed.map((p) => p.date))
   const isMultiDay = uniqueDates.size > 1
+  const isDaily =
+    isMultiDay && parsed.every((p) => p.hm === '00:00' && p.hms === '00:00:00')
+
+  if (isDaily) {
+    return parsed.map((p) => p.monthDay)
+  }
 
   const shortLabels = parsed.map((p) =>
     isMultiDay ? `${p.monthDay} ${p.hm}` : p.hm,
@@ -243,9 +258,9 @@ export const getHistoryChart = createServerFn({ method: 'GET' })
               to: endVal,
               date: rawParams.date,
               range: rawParams.range ?? rawParams.timeframe,
-              limit: rawParams.limit ?? 100,
+              limit: rawParams.limit ?? 1500,
             }
-          : { limit: 100 },
+          : { limit: 1500 },
       })
       return {
         ...response.data,
