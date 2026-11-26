@@ -21,7 +21,6 @@ import { Skeleton } from '#/components/ui/shadcn/skeleton'
 import { MetricsGrid } from '#/components/ui/metrics-grid'
 import type { MetricItem } from '#/components/ui/metrics-grid'
 import type { TrendPoint } from '#/components/ui/metric-card'
-import { isMonitoredRoom } from '#/components/ui/denah'
 import { cn } from '#/lib/utils'
 import {
   extractApiTime,
@@ -78,9 +77,7 @@ export function RoomDetailDialog({
   const getHistoryChartFn = useServerFn(getHistoryChart)
 
   const canFetchLive = Boolean(
-    isOpen &&
-    roomId &&
-    (isMonitoredRoom(roomId) || registeredApRoomIds.includes(roomId)),
+    isOpen && roomId && registeredApRoomIds.includes(roomId),
   )
 
   const roomLiveQuery = useQuery({
