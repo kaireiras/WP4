@@ -689,6 +689,9 @@ export function Denah({
   const staticRoomCount = DENAH_ROOMS.length - activeApCount
 
   const selectedRoomObj = DENAH_ROOMS.find((r) => r.id === selectedRoom)
+  const selectedHasAp = selectedRoomObj
+    ? roomStatuses[selectedRoomObj.id] !== undefined
+    : false
   const selectedKosongObj = DENAH_KOSONG_AREAS.find(
     (k) => k.id === selectedRoom,
   )
@@ -772,7 +775,7 @@ export function Denah({
             )}
 
             {selectedRoomObj ? (
-              selectedRoomObj.hasAp ? (
+              selectedHasAp ? (
                 <>
                   {roomStatuses[selectedRoomObj.id] && (
                     <StatusLevel
@@ -800,7 +803,7 @@ export function Denah({
 
           <div className="flex flex-wrap items-center gap-3 text-tiny-normal text-muted-foreground">
             {selectedRoomObj ? (
-              !selectedRoomObj.hasAp ? (
+              !selectedHasAp ? (
                 <span>
                   Kepadatan tidak terpantau (ruangan tidak memiliki Access
                   Point)
@@ -865,8 +868,8 @@ export function Denah({
 
           {/* 2. LAYER 51 RUANGAN (Dengan Jarak/Gap 10px Seragam di Semua Sisi) */}
           {DENAH_ROOMS.map((room) => {
-            const hasAp = Boolean(room.hasAp && isMonitoredRoom(room.id))
-            const status = hasAp ? roomStatuses[room.id] : undefined
+            const status = roomStatuses[room.id]
+            const hasAp = status !== undefined
             const isSelected = selectedRoom === room.id
             const style = status ? statusStyles[status] : null
 
@@ -883,7 +886,7 @@ export function Denah({
                 onClick={() => onSelectRoom?.(room.id)}
                 title={
                   hasAp
-                    ? `${room.name} · AP Terpasang ${status ? `(${status.toUpperCase()})` : ''}`
+                    ? `${room.name} · AP Terpasang (${status.toUpperCase()})`
                     : `${room.name} · Ruangan Statis (Tanpa Access Point)`
                 }
                 style={{
@@ -910,7 +913,7 @@ export function Denah({
                 </span>
 
                 {/* Status pill on monitored rooms */}
-                {hasAp && status && (
+                {hasAp && (
                   <span
                     className={cn(
                       'inline-block text-[9px] font-bold px-1.5 py-0.5 rounded-xs uppercase tracking-tight mt-1',

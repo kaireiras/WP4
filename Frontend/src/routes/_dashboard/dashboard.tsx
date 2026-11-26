@@ -98,7 +98,7 @@ function DashboardPage() {
         subtitle="Lihat keadaan seluruh ruangan"
         actions={
           <DashboardHeaderActions
-            showCountdown={false}
+            showCountdown={true}
             showTimeRange={false}
             onRefresh={() => overviewQuery.refetch()}
             isRefreshing={overviewQuery.isFetching}
