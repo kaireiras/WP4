@@ -11,30 +11,25 @@ use App\Models\ApRegistry;
 use App\Models\OccupancyPrediction;
 use App\Services\OccupancyClassifier;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 /**
  * Modul 2 MVP — Crowd Detection & Alert (TANPA Machine Learning).
  *
- * Untuk setiap AP terdaftar:
- *   1. Ambil polling terakhir dari poll_log (termasuk polling yang GAGAL).
- *   2. Klasifikasikan n_clients menjadi LOW/MEDIUM/HIGH/CROWDED (if-else).
- *      poll_ok = FALSE -> level UNKNOWN (bukan LOW), sesuai dokumen MVP.
- *   3. Simpan hasil ke occupancy_predictions.
- *   4. Buat alert bila level CROWDED (> 40 client) dan belum ada alert ACTIVE
- *      untuk AP tersebut.
- *   5. Broadcast event OccupancyUpdated / CrowdedAlert ke kanal metrics.live.
+ * Mengelompokkan seluruh AP terdaftar berdasarkan ruangan (suffix setelah "-"),
+ * menjumlahkan n_clients per ruangan, lalu mengklasifikasikan status ruangan
+ * menjadi LOW / MEDIUM / HIGH / CROWDED / UNKNOWN.
  *
  * Dijadwalkan setiap 15 detik (seirama polling SNMP) lewat routes/console.php.
  */
 class RunOccupancyClassification extends Command
 {
     protected $signature = 'occupancy:run
-                             {--ap= : Proses satu AP saja (opsional, untuk pengujian)}';
+                             {--ap= : Proses ruangan dari AP tertentu (opsional, untuk pengujian)}';
 
-    protected $description = 'Klasifikasi okupansi seluruh AP berdasarkan n_clients (MVP tanpa ML)';
+    protected $description = 'Klasifikasi okupansi per ruangan berdasarkan total n_clients seluruh AP di ruangan tersebut';
 
     public function __construct(private readonly OccupancyClassifier $classifier)
     {
@@ -43,118 +38,162 @@ class RunOccupancyClassification extends Command
 
     public function handle(): int
     {
-        $aps = ApRegistry::query()
-            ->when($this->option('ap'), fn ($query, $apId) => $query->where('ap_id', $apId))
-            ->get();
+        $aps = ApRegistry::all();
 
         if ($aps->isEmpty()) {
             $this->warn('Tidak ada AP terdaftar di ap_registry.');
             return Command::SUCCESS;
         }
 
+        $targetRoom = null;
+        if ($this->option('ap')) {
+            $targetRoom = $this->classifier->extractRoomId((string) $this->option('ap'));
+        }
+
+        $groupedByRoom = $aps->groupBy(
+            fn (ApRegistry $ap) => $this->classifier->extractRoomId((string) $ap->ap_id)
+        );
+
+        if ($targetRoom !== null) {
+            $groupedByRoom = $groupedByRoom->filter(
+                fn (Collection $roomAps, string $roomId) => strcasecmp($roomId, $targetRoom) === 0
+            );
+        }
+
+        if ($groupedByRoom->isEmpty()) {
+            $this->warn('Tidak ada AP/ruangan yang cocok untuk diproses.');
+            return Command::SUCCESS;
+        }
+
         $processed = 0;
         $failed = 0;
 
-        foreach ($aps as $ap) {
+        foreach ($groupedByRoom as $roomId => $roomAps) {
             try {
-                $this->processAp((string) $ap->ap_id);
+                $this->processRoom((string) $roomId, $roomAps);
                 $processed++;
             } catch (\Throwable $e) {
                 $failed++;
-                Log::error("Occupancy gagal diproses untuk AP {$ap->ap_id}: " . $e->getMessage());
-                $this->error("AP {$ap->ap_id} gagal diproses: {$e->getMessage()}");
+                Log::error("Occupancy gagal diproses untuk ruangan {$roomId}: " . $e->getMessage());
+                $this->error("Ruangan {$roomId} gagal diproses: {$e->getMessage()}");
             }
         }
 
-        $this->info("Putaran selesai: {$processed} AP diproses, {$failed} gagal.");
+        $this->info("Putaran selesai: {$processed} ruangan diproses, {$failed} gagal.");
         return Command::SUCCESS;
     }
 
-    private function processAp(string $apId): void
+    /**
+     * @param  Collection<int, ApRegistry>  $roomAps
+     */
+    private function processRoom(string $roomId, Collection $roomAps): void
     {
-        // 1. Polling terakhir AP ini (termasuk polling gagal: poll_ok = 0).
-        $latestPoll = DB::table('poll_log')
-            ->where('ap_id', $apId)
-            ->orderByDesc('ts')
-            ->first();
+        $latestPolls = [];
 
-        if (! $latestPoll) {
-            $this->line("AP {$apId} - Belum ada data polling, dilewati.");
+        foreach ($roomAps as $ap) {
+            $latestPoll = DB::table('poll_log')
+                ->where('ap_id', $ap->ap_id)
+                ->orderByDesc('ts')
+                ->first();
+
+            if ($latestPoll) {
+                $latestPolls[] = $latestPoll;
+            }
+        }
+
+        if (empty($latestPolls)) {
+            $this->line("Ruangan {$roomId} - Belum ada data polling, dilewati.");
             return;
         }
 
-        $pollOk = (bool) $latestPoll->poll_ok;
+        // Hitung klasifikasi status berdasarkan total client seluruh AP di ruangan ini
+        $roomEval = $this->classifier->evaluateRoom($latestPolls);
+        $lastOccupancy = null;
+        $hasNewPrediction = false;
 
-        // 2. Klasifikasi kepadatan (if-else, tanpa ML).
-        $result = $this->classifier->evaluate(
-            $latestPoll->n_clients !== null ? (int) $latestPoll->n_clients : null,
-            $pollOk
-        );
+        foreach ($latestPolls as $poll) {
+            $apId = (string) $poll->ap_id;
+            $apCount = ((bool) $poll->poll_ok && $poll->n_clients !== null)
+                ? max(0, (int) $poll->n_clients)
+                : 0;
 
-        // Ekstrak room_id langsung dari suffix ap_id (misal AP1-CU205 -> CU205)
-        $roomId = str_contains($apId, '-')
-            ? Str::afterLast($apId, '-')
-            : $apId;
+            $existing = OccupancyPrediction::where('ap_id', $apId)
+                ->where('ts', $poll->ts)
+                ->first();
 
-        // Jika polling dengan ts ini sudah diproses sebelumnya, lewati
-        // (jadwal 15 detik bisa berjalan lebih cepat daripada datangnya polling baru).
-        $alreadyProcessed = OccupancyPrediction::where('ap_id', $apId)
-            ->where('ts', $latestPoll->ts)
-            ->exists();
+            if ($existing) {
+                if ($existing->level !== $roomEval['level']) {
+                    $existing->update(['level' => $roomEval['level']]);
+                    $hasNewPrediction = true;
+                }
+                $lastOccupancy = $existing;
+                continue;
+            }
 
-        if ($alreadyProcessed) {
-            $this->line("AP {$apId} - Polling ts {$latestPoll->ts} sudah diproses, dilewati.");
+            $lastOccupancy = OccupancyPrediction::create([
+                'ts' => $poll->ts,
+                'ap_id' => $apId,
+                'room_id' => $roomId,
+                'estimated_count' => $apCount,
+                'level' => $roomEval['level'],
+                'confidence' => 1.000,
+                'model_version_id' => null,
+            ]);
+            $hasNewPrediction = true;
+        }
+
+        if (! $hasNewPrediction) {
+            $this->line("Ruangan {$roomId} - Polling terbaru sudah diproses, dilewati.");
             return;
         }
 
-        // 3. Simpan hasil klasifikasi ke occupancy_predictions.
-        $occupancy = OccupancyPrediction::create([
-            'ts' => $latestPoll->ts,
-            'ap_id' => $apId,
-            'room_id' => $roomId,
-            'estimated_count' => $result['count'],
-            'level' => $result['level'],
-            'confidence' => 1.000,
-            'model_version_id' => null,
-        ]);
+        $apIdsLabel = implode(', ', array_map(fn ($p) => (string) $p->ap_id, $latestPolls));
 
-        // 4. Alert bila CROWDED (> 40 client) dan belum ada alert ACTIVE untuk AP ini.
-        if ($result['level'] === OccupancyClassifier::LEVEL_CROWDED) {
-            $existingActive = Alert::where('ap_id', $apId)
+        // Kelola alert berdasarkan status ruangan gabungan
+        if ($roomEval['level'] === OccupancyClassifier::LEVEL_CROWDED) {
+            $existingActive = Alert::where('status', 'ACTIVE')
                 ->where('level', OccupancyClassifier::LEVEL_CROWDED)
-                ->where('status', 'ACTIVE')
+                ->where(function ($q) use ($roomId) {
+                    $q->where('room_id', $roomId)
+                        ->orWhere('ap_id', $roomId)
+                        ->orWhere('ap_id', 'like', '%-' . $roomId);
+                })
                 ->exists();
 
             if (! $existingActive) {
                 $alert = Alert::create([
                     'triggered_at' => now(),
-                    'ap_id' => $apId,
+                    'ap_id' => (string) $latestPolls[0]->ap_id,
                     'room_id' => $roomId,
                     'level' => OccupancyClassifier::LEVEL_CROWDED,
-                    'estimated_count' => $result['count'],
+                    'estimated_count' => $roomEval['count'],
                     'status' => 'ACTIVE',
                 ]);
 
                 $this->safeBroadcast(new CrowdedAlert($alert));
 
-                Log::info("Alert CROWDED dibuat untuk AP {$apId} (ruangan {$roomId}): {$result['count']} client.");
-                $this->warn("AP {$apId} - CROWDED: {$result['count']} client. Alert dibuat.");
+                Log::info("Alert CROWDED dibuat untuk ruangan {$roomId} ({$apIdsLabel}): {$roomEval['count']} client.");
+                $this->warn("Ruangan {$roomId} - CROWDED: {$roomEval['count']} client. Alert dibuat.");
             }
-        } elseif ($result['level'] !== OccupancyClassifier::LEVEL_UNKNOWN) {
-            // Selesaikan alert ACTIVE jika kepadatan sudah kembali di bawah batas CROWDED.
-            Alert::where('ap_id', $apId)
+        } elseif ($roomEval['level'] !== OccupancyClassifier::LEVEL_UNKNOWN) {
+            Alert::where('status', 'ACTIVE')
                 ->where('level', OccupancyClassifier::LEVEL_CROWDED)
-                ->where('status', 'ACTIVE')
+                ->where(function ($q) use ($roomId) {
+                    $q->where('room_id', $roomId)
+                        ->orWhere('ap_id', $roomId)
+                        ->orWhere('ap_id', 'like', '%-' . $roomId);
+                })
                 ->update([
                     'status' => 'RESOLVED',
                     'resolved_at' => now(),
                 ]);
         }
 
-        // 5. Broadcast update okupansi ke dashboard (kanal metrics.live).
-        $this->safeBroadcast(new OccupancyUpdated($occupancy));
+        if ($lastOccupancy) {
+            $this->safeBroadcast(new OccupancyUpdated($lastOccupancy));
+        }
 
-        $this->line("AP {$apId} - {$result['level']}: {$result['count']} client (poll_ok=" . ($pollOk ? 'TRUE' : 'FALSE') . ').');
+        $this->line("Ruangan {$roomId} ({$apIdsLabel}) - {$roomEval['level']}: {$roomEval['count']} client.");
     }
 
     /**
