@@ -96,6 +96,30 @@ class RunOccupancyClassification extends Command
                 ->orderByDesc('ts')
                 ->first();
 
+            $latestVapTs = DB::table('vap_snapshot')
+                ->where('ap_id', $ap->ap_id)
+                ->where('vap_up', 1)
+                ->max('ts');
+
+            if ($latestVapTs) {
+                $vapClients = (int) DB::table('vap_snapshot')
+                    ->where('ap_id', $ap->ap_id)
+                    ->where('ts', $latestVapTs)
+                    ->where('vap_up', 1)
+                    ->sum('n_clients');
+
+                if (! $latestPoll || (string) $latestVapTs > (string) $latestPoll->ts) {
+                    $latestPoll = (object) [
+                        'ap_id' => $ap->ap_id,
+                        'ts' => $latestVapTs,
+                        'n_clients' => $vapClients,
+                        'poll_ok' => 1,
+                    ];
+                } elseif ((bool) $latestPoll->poll_ok && $vapClients > (int) $latestPoll->n_clients) {
+                    $latestPoll->n_clients = $vapClients;
+                }
+            }
+
             if ($latestPoll) {
                 $latestPolls[] = $latestPoll;
             }

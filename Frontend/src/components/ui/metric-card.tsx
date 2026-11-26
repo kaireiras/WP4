@@ -67,7 +67,7 @@ export function MetricCard({
   value,
   unit,
   color = 'blue',
-  trend = [30, 45, 38, 60, 52, 75, 68, 85],
+  trend = [],
   chartHeight = 'h-16',
   className,
   ...props
