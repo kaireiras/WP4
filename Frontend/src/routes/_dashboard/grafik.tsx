@@ -25,7 +25,7 @@ const grafikSearchSchema = z.object({
   range: z.string().catch('today'),
   from: z.string().optional(),
   to: z.string().optional(),
-  limit: z.coerce.number().int().positive().max(1000).catch(100),
+  limit: z.coerce.number().int().positive().max(5000).catch(1500),
 })
 
 export const Route = createFileRoute('/_dashboard/grafik')({
@@ -58,7 +58,7 @@ function GrafikPage() {
             room_id: room === 'all' ? undefined : room,
             from: bounds.from,
             to: bounds.to,
-            range: from && to ? undefined : range,
+            range,
             limit,
           },
         },
