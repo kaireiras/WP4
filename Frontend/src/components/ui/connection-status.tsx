@@ -43,7 +43,7 @@ export const statusConfig: Record<
     dotOnlyBg: 'bg-success-50 dark:bg-success-40',
     dotPingBg: 'bg-success-40 sm:bg-success-20',
     getDefaultText: (syncTime) =>
-      syncTime ? `Last sync: ${syncTime}` : 'Last sync: 12:09:15',
+      syncTime ? `Last sync: ${syncTime}` : 'Last sync: -',
   },
   green: {
     desktopBgClass: 'sm:bg-success-50',
@@ -51,7 +51,7 @@ export const statusConfig: Record<
     dotOnlyBg: 'bg-success-50 dark:bg-success-40',
     dotPingBg: 'bg-success-40 sm:bg-success-20',
     getDefaultText: (syncTime) =>
-      syncTime ? `Last sync: ${syncTime}` : 'Last sync: 12:09:15',
+      syncTime ? `Last sync: ${syncTime}` : 'Last sync: -',
   },
   disconnected: {
     desktopBgClass: 'sm:bg-destructive-50',

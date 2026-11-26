@@ -721,7 +721,7 @@ function DesainPage() {
               {isMonitoredRoom(selectedRoom) ? (
                 <MetricsGrid
                   roomName={selectedRoom}
-                  statusLevel={DEFAULT_ROOM_STATUSES[selectedRoom]}
+                  statusLevel={DEFAULT_ROOM_STATUSES[selectedRoom] ?? 'low'}
                   isLive={true}
                   updatedAt="Diperbarui 12:09:15"
                 />
@@ -787,7 +787,10 @@ function DesainPage() {
                 {isMonitoredRoom(selectedRoom) ? (
                   <span className="ml-2 text-tiny-semibold text-success-70">
                     (AP Aktif ·{' '}
-                    {DEFAULT_ROOM_STATUSES[selectedRoom].toUpperCase()})
+                    {(
+                      DEFAULT_ROOM_STATUSES[selectedRoom] ?? 'low'
+                    ).toUpperCase()}
+                    )
                   </span>
                 ) : (
                   <span className="ml-2 text-tiny-normal text-muted-foreground">

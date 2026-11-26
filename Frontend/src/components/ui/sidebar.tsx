@@ -87,8 +87,8 @@ export function Sidebar({
   current,
   onSelect,
   onLogout,
-  userName = 'Fauzan Trisuladana',
-  userEmail = 'fauzantrisuladana@gmail.com',
+  userName = 'Pengguna',
+  userEmail = '-',
   userAvatar,
   className,
   ...props

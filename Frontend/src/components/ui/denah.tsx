@@ -105,8 +105,6 @@ export interface RoomData {
   w: number // absolute px in 2400x1200 canvas
   h: number // absolute px in 2400x1200 canvas
   hasAp: boolean
-  crowdCount?: string
-  confidence?: string
 }
 
 export interface KosongAreaData {
@@ -143,8 +141,6 @@ const RAW_ROOMS: Omit<RoomData, 'hasAp'>[] = [
     y: 10,
     w: 181,
     h: 188,
-    crowdCount: '~21 orang',
-    confidence: '84%',
   },
   {
     id: 'CU205',
@@ -153,8 +149,6 @@ const RAW_ROOMS: Omit<RoomData, 'hasAp'>[] = [
     y: 10,
     w: 181,
     h: 188,
-    crowdCount: '~62 orang',
-    confidence: '92%',
   },
   {
     id: 'CU206',
@@ -163,8 +157,6 @@ const RAW_ROOMS: Omit<RoomData, 'hasAp'>[] = [
     y: 10,
     w: 182,
     h: 188,
-    crowdCount: '~41 orang',
-    confidence: '96%',
   },
   {
     id: 'CU207',
@@ -173,8 +165,6 @@ const RAW_ROOMS: Omit<RoomData, 'hasAp'>[] = [
     y: 10,
     w: 181,
     h: 188,
-    crowdCount: '~57 orang',
-    confidence: '73%',
   },
   {
     id: 'CU208',
@@ -183,8 +173,6 @@ const RAW_ROOMS: Omit<RoomData, 'hasAp'>[] = [
     y: 10,
     w: 181,
     h: 188,
-    crowdCount: '~6 orang',
-    confidence: '76%',
   },
   {
     id: 'CU209',
@@ -233,8 +221,6 @@ const RAW_ROOMS: Omit<RoomData, 'hasAp'>[] = [
     y: 10,
     w: 181,
     h: 188,
-    crowdCount: '~67 orang',
-    confidence: '87%',
   },
   {
     id: 'HU208',
@@ -243,8 +229,6 @@ const RAW_ROOMS: Omit<RoomData, 'hasAp'>[] = [
     y: 10,
     w: 181,
     h: 188,
-    crowdCount: '~37 orang',
-    confidence: '78%',
   },
   {
     id: 'HU207',
@@ -253,8 +237,6 @@ const RAW_ROOMS: Omit<RoomData, 'hasAp'>[] = [
     y: 10,
     w: 182,
     h: 188,
-    crowdCount: '~67 orang',
-    confidence: '84%',
   },
   {
     id: 'HU206',
@@ -263,8 +245,6 @@ const RAW_ROOMS: Omit<RoomData, 'hasAp'>[] = [
     y: 10,
     w: 181,
     h: 188,
-    crowdCount: '~65 orang',
-    confidence: '72%',
   },
   {
     id: 'HU205',
@@ -349,8 +329,6 @@ const RAW_ROOMS: Omit<RoomData, 'hasAp'>[] = [
     y: 506,
     w: 181,
     h: 188,
-    crowdCount: '~25 orang',
-    confidence: '87%',
   },
 
   // -------------------------------------------------------------
@@ -379,8 +357,6 @@ const RAW_ROOMS: Omit<RoomData, 'hasAp'>[] = [
     y: 308,
     w: 85,
     h: 89,
-    crowdCount: '~6 orang',
-    confidence: '79%',
   },
   {
     id: 'HU202B',
@@ -692,22 +668,12 @@ const statusStyles: Record<
   },
 }
 
-export const DEFAULT_ROOM_STATUSES: Record<MonitoredRoomId, StatusLevelType> = {
-  CM201: 'medium',
-  CU204: 'medium',
-  CU205: 'crowded',
-  CU206: 'high',
-  CU207: 'crowded',
-  CU208: 'low',
-  HU202A: 'medium',
-  HU206: 'crowded',
-  HU207: 'crowded',
-  HU208: 'high',
-  HU209: 'crowded',
-}
+export const DEFAULT_ROOM_STATUSES: Partial<
+  Record<MonitoredRoomId, StatusLevelType>
+> = {}
 
 export function Denah({
-  selectedRoom = 'CU205',
+  selectedRoom,
   onSelectRoom,
   roomStatuses = DEFAULT_ROOM_STATUSES,
   showKosong: initialShowKosong = true,
@@ -716,6 +682,11 @@ export function Denah({
   ...props
 }: DenahProps) {
   const [showKosong, setShowKosong] = React.useState(initialShowKosong)
+
+  const activeApCount = DENAH_ROOMS.filter(
+    (r) => roomStatuses[r.id] !== undefined,
+  ).length
+  const staticRoomCount = DENAH_ROOMS.length - activeApCount
 
   const selectedRoomObj = DENAH_ROOMS.find((r) => r.id === selectedRoom)
   const selectedKosongObj = DENAH_KOSONG_AREAS.find(
@@ -743,8 +714,9 @@ export function Denah({
             </h3>
           </div>
           <p className="text-tiny-normal text-muted-foreground mt-0.5">
-            11 Ruangan Terpasang AP (Deteksi Aktif) · 40 Ruangan Statis (Tanpa
-            AP) · 6 Area Terbuka / Void.
+            {activeApCount} Ruangan Terpasang AP (Deteksi Aktif) ·{' '}
+            {staticRoomCount} Ruangan Statis (Tanpa AP) ·{' '}
+            {DENAH_KOSONG_AREAS.length} Area Terbuka / Void.
           </p>
         </div>
 
@@ -911,7 +883,7 @@ export function Denah({
                 onClick={() => onSelectRoom?.(room.id)}
                 title={
                   hasAp
-                    ? `${room.name} · AP Terpasang ${status ? `(${status.toUpperCase()})` : ''} ${room.crowdCount || ''}`
+                    ? `${room.name} · AP Terpasang ${status ? `(${status.toUpperCase()})` : ''}`
                     : `${room.name} · Ruangan Statis (Tanpa Access Point)`
                 }
                 style={{

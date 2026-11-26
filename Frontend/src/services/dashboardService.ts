@@ -104,6 +104,22 @@ export type RoomLiveDetailResult =
     }
 
 // Helpers
+export function extractRoomIdFromAp(apOrRoomId: string): string {
+  const trimmed = apOrRoomId.trim()
+  if (!trimmed) return ''
+  const dashIdx = trimmed.lastIndexOf('-')
+  return dashIdx >= 0
+    ? trimmed.slice(dashIdx + 1).toUpperCase()
+    : trimmed.toUpperCase()
+}
+
+export function classifyOccupancyByClients(count: number): ApiOccupancyLevel {
+  if (count > 40) return 'CROWDED'
+  if (count > 25) return 'HIGH'
+  if (count > 10) return 'MEDIUM'
+  return 'LOW'
+}
+
 function getOccupancySeverityRank(level: string): number {
   switch (level.toUpperCase()) {
     case 'CROWDED':
@@ -121,43 +137,108 @@ function getOccupancySeverityRank(level: string): number {
 export function normalizeOverviewRooms(
   rooms: Array<OverviewRoomRecord>,
 ): Array<OverviewRoomRecord> {
-  const roomMap = new Map<string, OverviewRoomRecord>()
+  const roomGroups = new Map<string, Array<OverviewRoomRecord>>()
 
   rooms.forEach((candidate) => {
-    const key = candidate.room_id.trim()
+    const key = extractRoomIdFromAp(candidate.room_id || candidate.ap_id)
     if (!key) return
-
-    const existing = roomMap.get(key)
-    if (!existing) {
-      roomMap.set(key, candidate)
-      return
-    }
-
-    const existingTs = formatApiDateTime(existing.last_sync) ?? ''
-    const candidateTs = formatApiDateTime(candidate.last_sync) ?? ''
-
-    if (candidateTs > existingTs) {
-      roomMap.set(key, candidate)
-      return
-    }
-
-    if (candidateTs === existingTs) {
-      const existingRank = getOccupancySeverityRank(existing.level)
-      const candidateRank = getOccupancySeverityRank(candidate.level)
-
-      if (
-        candidateRank > existingRank ||
-        (candidateRank === existingRank &&
-          candidate.estimated_count >= existing.estimated_count)
-      ) {
-        roomMap.set(key, candidate)
-      }
+    const list = roomGroups.get(key)
+    if (list) {
+      list.push(candidate)
+    } else {
+      roomGroups.set(key, [candidate])
     }
   })
 
-  return Array.from(roomMap.values()).sort((a, b) =>
-    a.room_id.localeCompare(b.room_id),
-  )
+  const normalized: Array<OverviewRoomRecord> = []
+
+  roomGroups.forEach((group, roomId) => {
+    const byAp = new Map<string, OverviewRoomRecord>()
+    group.forEach((item) => {
+      const apKey = item.ap_id.trim() || roomId
+      const existing = byAp.get(apKey)
+      if (!existing) {
+        byAp.set(apKey, item)
+        return
+      }
+      const existingTs = formatApiDateTime(existing.last_sync) ?? ''
+      const itemTs = formatApiDateTime(item.last_sync) ?? ''
+      if (itemTs >= existingTs) {
+        byAp.set(apKey, item)
+      }
+    })
+
+    const distinctAps = Array.from(byAp.values())
+    const totalCount = distinctAps.reduce(
+      (sum, item) => sum + Math.max(0, Number(item.estimated_count || 0)),
+      0,
+    )
+
+    const apIds = distinctAps
+      .map((item) => item.ap_id.trim())
+      .filter(Boolean)
+      .join(', ')
+
+    const latestSync = distinctAps.reduce<string | null>((latest, item) => {
+      if (!item.last_sync) return latest
+      if (!latest) return item.last_sync
+      const itemTs = formatApiDateTime(item.last_sync) ?? item.last_sync
+      const latestTs = formatApiDateTime(latest) ?? latest
+      return itemTs > latestTs ? item.last_sync : latest
+    }, null)
+
+    const latestPollAt = distinctAps.reduce<string | null>((latest, item) => {
+      if (!item.last_poll_at) return latest
+      if (!latest) return item.last_poll_at
+      return item.last_poll_at > latest ? item.last_poll_at : latest
+    }, null)
+
+    const pollValues = distinctAps
+      .map((item) => item.poll_ok)
+      .filter((v): v is boolean => v !== null && v !== undefined)
+    const pollOk =
+      pollValues.length === 0 ? undefined : pollValues.some((v) => v)
+
+    const highestReported = distinctAps.reduce<ApiOccupancyLevel>(
+      (best, item) =>
+        getOccupancySeverityRank(item.level) > getOccupancySeverityRank(best)
+          ? item.level
+          : best,
+      'LOW',
+    )
+
+    let resolvedLevel: ApiOccupancyLevel
+    if (totalCount > 0) {
+      const classified = classifyOccupancyByClients(totalCount)
+      resolvedLevel =
+        getOccupancySeverityRank(classified) >=
+        getOccupancySeverityRank(highestReported)
+          ? classified
+          : highestReported
+    } else if (pollOk === false) {
+      resolvedLevel = 'UNKNOWN'
+    } else {
+      resolvedLevel = highestReported
+    }
+
+    normalized.push({
+      room_id: roomId,
+      ap_id: apIds || distinctAps[0].ap_id,
+      level: resolvedLevel,
+      estimated_count: totalCount,
+      last_sync: latestSync,
+      poll_ok: pollOk ?? null,
+      connection_status:
+        pollOk === undefined
+          ? distinctAps[0].connection_status
+          : pollOk
+            ? 'ONLINE'
+            : 'OFFLINE',
+      last_poll_at: latestPollAt,
+    })
+  })
+
+  return normalized.sort((a, b) => a.room_id.localeCompare(b.room_id))
 }
 
 export function formatConfidencePercent(
@@ -234,6 +315,16 @@ export const getRoomLiveDetail = createServerFn({ method: 'GET' })
             `Data live untuk ruangan ${data.roomId} tidak ditemukan.`,
           data: null,
         }
+      }
+
+      const liveCount = Math.max(
+        Number(detailData.metrics.active_clients || 0),
+        Number(detailData.estimated_count || 0),
+      )
+
+      if (liveCount > 0 || detailData.poll_ok === true) {
+        detailData.estimated_count = liveCount
+        detailData.level = classifyOccupancyByClients(liveCount)
       }
 
       return {

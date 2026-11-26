@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Check, ChevronDown, DoorOpen } from 'lucide-react'
-import { MONITORED_ROOM_IDS } from './denah'
 import { resolveRoomDisplayLocation } from '#/services/alertService'
 import { cn } from '#/lib/utils'
 import {
@@ -21,15 +20,6 @@ export interface RoomOption {
 
 export const ROOM_OPTIONS: Array<RoomOption> = [
   { id: 'all', name: 'Semua Ruangan', building: 'Seluruh Gedung' },
-  ...MONITORED_ROOM_IDS.map((id) => {
-    const loc = resolveRoomDisplayLocation(id)
-    return {
-      id,
-      name: id,
-      building: loc.buildingName,
-      wing: loc.wingName,
-    }
-  }),
 ]
 
 export interface RoomPickerProps {
