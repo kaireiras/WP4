@@ -53,4 +53,23 @@ class OccupancyClassifierTest extends TestCase
             'count' => 45,
         ], $result);
     }
+
+    public function test_evaluate_room_and_evaluate_by_rooms_aggregate_multiple_aps(): void
+    {
+        $this->assertSame('CU205', $this->classifier->extractRoomId('AP1-CU205'));
+        $this->assertSame('CU205', $this->classifier->extractRoomId('AP2-CU205'));
+
+        $grouped = $this->classifier->evaluateByRooms([
+            ['ap_id' => 'AP1-CU205', 'n_clients' => 22, 'poll_ok' => true, 'ts' => '2026-11-26 15:00:00'],
+            ['ap_id' => 'AP2-CU205', 'n_clients' => 23, 'poll_ok' => true, 'ts' => '2026-11-26 15:00:00'],
+            ['ap_id' => 'AP1-CU206', 'n_clients' => 8, 'poll_ok' => true, 'ts' => '2026-11-26 15:00:00'],
+        ]);
+
+        // Masing-masing AP di CU205 (22 dan 23) adalah MEDIUM, tetapi gabungan ruangan = 45 -> CROWDED
+        $this->assertSame(OccupancyClassifier::LEVEL_CROWDED, $grouped['CU205']['level']);
+        $this->assertSame(45, $grouped['CU205']['count']);
+        $this->assertSame(['AP1-CU205', 'AP2-CU205'], $grouped['CU205']['ap_ids']);
+        $this->assertSame(OccupancyClassifier::LEVEL_LOW, $grouped['CU206']['level']);
+        $this->assertSame(8, $grouped['CU206']['count']);
+    }
 }

@@ -71,21 +71,22 @@ class DashboardController extends Controller
             ->get();
 
         $rooms = $rawAps
-            ->groupBy(fn ($row) => $this->extractRoomId((string) $row->ap_id))
+            ->groupBy(fn ($row) => $this->classifier->extractRoomId((string) $row->ap_id))
             ->map(function ($roomGroup, $roomId) {
                 $apIds = $roomGroup->pluck('ap_id')->unique()->values()->all();
                 $totalEstimated = (int) $roomGroup->sum('estimated_count');
 
-                $pollValues = $roomGroup->pluck('poll_ok')->filter(fn ($v) => $v !== null);
-                $pollOk = $pollValues->isEmpty()
-                    ? null
-                    : $pollValues->contains(fn ($v) => (bool) $v);
+                $pollInputs = $roomGroup->map(fn ($row) => [
+                    'poll_ok' => $row->poll_ok,
+                    'n_clients' => (int) $row->estimated_count,
+                ]);
+                $roomEval = $this->classifier->evaluateRoom($pollInputs);
 
                 $hasKnownPrediction = $roomGroup->contains(
                     fn ($row) => strtoupper((string) $row->level) !== OccupancyClassifier::LEVEL_UNKNOWN
                 );
 
-                $level = ($pollOk === true || ($pollOk === null && $hasKnownPrediction))
+                $level = ($roomEval['poll_ok'] === true || ($roomEval['poll_ok'] === null && $hasKnownPrediction))
                     ? $this->classifier->classify($totalEstimated)
                     : OccupancyClassifier::LEVEL_UNKNOWN;
 
@@ -95,8 +96,8 @@ class DashboardController extends Controller
                     'level'             => $level,
                     'estimated_count'   => $totalEstimated,
                     'last_sync'         => $roomGroup->max('last_sync'),
-                    'poll_ok'           => $pollOk,
-                    'connection_status' => $pollOk === null ? 'UNKNOWN' : ($pollOk ? 'ONLINE' : 'OFFLINE'),
+                    'poll_ok'           => $roomEval['poll_ok'],
+                    'connection_status' => $roomEval['poll_ok'] === null ? 'UNKNOWN' : ($roomEval['poll_ok'] ? 'ONLINE' : 'OFFLINE'),
                     'last_poll_at'      => $roomGroup->max('last_poll_at'),
                 ];
             })
