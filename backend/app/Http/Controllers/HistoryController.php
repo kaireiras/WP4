@@ -131,13 +131,17 @@ class HistoryController extends Controller
             DB::raw('COALESCE(SUM(vs.tx_retries), 0) * 1.0 / COUNT(DISTINCT vs.ts) as ap_tx_retries'),
         ])->groupBy(DB::raw($bucketExpr), 'vs.ap_id');
 
-        // Tahap 2: Agregasi akhir sesuai mode ruangan/AP tertentu atau seluruh gedung ("ALL")
+        // Tahap 2: Agregasi akhir sesuai mode ruangan (gabungkan semua AP dengan room_id sama) atau seluruh gedung ("ALL")
+        $apListExpr = $driver === 'sqlite'
+            ? "GROUP_CONCAT(DISTINCT agg.ap_id)"
+            : "GROUP_CONCAT(DISTINCT agg.ap_id ORDER BY agg.ap_id SEPARATOR ', ')";
+
         if ($isFiltered) {
             $data = DB::query()
                 ->fromSub($perApQuery, 'agg')
                 ->select([
                     'agg.bucket_ts as ts',
-                    'agg.ap_id',
+                    DB::raw("{$apListExpr} as ap_id"),
                     'agg.room_id',
                     DB::raw('COALESCE(SUM(agg.ap_active_clients), 0) as active_clients'),
                     DB::raw('COALESCE(SUM(agg.ap_rx_bytes), 0) as total_rx_bytes'),
@@ -146,7 +150,7 @@ class HistoryController extends Controller
                     DB::raw('COALESCE(SUM(agg.ap_tx_packets), 0) as total_tx_packets'),
                     DB::raw('COALESCE(SUM(agg.ap_tx_retries), 0) as total_tx_retries'),
                 ])
-                ->groupBy('agg.bucket_ts', 'agg.ap_id', 'agg.room_id')
+                ->groupBy('agg.bucket_ts', 'agg.room_id')
                 ->orderBy('agg.bucket_ts', 'desc')
                 ->limit($effectiveLimit)
                 ->get();
@@ -315,12 +319,9 @@ class HistoryController extends Controller
      */
     private function buildBucketExpression(string $interval, string $driver): string
     {
-        if ($interval === '15s') {
-            return 'vs.ts';
-        }
-
         if ($driver === 'sqlite') {
             return match ($interval) {
+                '15s' => "strftime('%Y-%m-%d %H:%M:', vs.ts) || printf('%02d', (CAST(strftime('%S', vs.ts) AS INTEGER) / 15) * 15)",
                 '30s' => "strftime('%Y-%m-%d %H:%M:', vs.ts) || CASE WHEN CAST(strftime('%S', vs.ts) AS INTEGER) < 30 THEN '00' ELSE '30' END",
                 '1m'  => "strftime('%Y-%m-%d %H:%M:00', vs.ts)",
                 '5m'  => "strftime('%Y-%m-%d %H:', vs.ts) || printf('%02d:00', (CAST(strftime('%M', vs.ts) AS INTEGER) / 5) * 5)",
@@ -333,6 +334,7 @@ class HistoryController extends Controller
         }
 
         return match ($interval) {
+            '15s' => "CONCAT(DATE_FORMAT(vs.ts, '%Y-%m-%d %H:%i:'), LPAD(FLOOR(SECOND(vs.ts) / 15) * 15, 2, '0'))",
             '30s' => "CONCAT(DATE_FORMAT(vs.ts, '%Y-%m-%d %H:%i:'), IF(SECOND(vs.ts) < 30, '00', '30'))",
             '1m'  => "DATE_FORMAT(vs.ts, '%Y-%m-%d %H:%i:00')",
             '5m'  => "CONCAT(DATE_FORMAT(vs.ts, '%Y-%m-%d %H:'), LPAD(FLOOR(MINUTE(vs.ts) / 5) * 5, 2, '0'), ':00')",
