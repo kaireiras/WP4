@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Alert;
 use App\Models\ApRoom;
 use App\Models\OccupancyPrediction;
+use App\Support\ApRoomHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -18,31 +18,52 @@ class DashboardController extends Controller
      */
     public function getOverview(): JsonResponse
     {
-        // Gunakan Model OccupancyPrediction untuk mencari timestamp terbaru
         $latestTs = OccupancyPrediction::max('ts');
 
-        $rooms = [];
+        $rooms = collect();
         if ($latestTs) {
-            $rooms = ApRoom::query()
-                ->leftJoin('occupancy_predictions as op', function ($join) use ($latestTs) {
-                    $join->on('ap_rooms.room_id', '=', 'op.room_id')
-                         ->where('op.ts', '=', $latestTs);
-                })
-                ->select([
-                    'ap_rooms.room_id',
-                    'ap_rooms.ap_id',
-                    DB::raw('COALESCE(op.level, "LOW") as level'),
-                    DB::raw('COALESCE(op.estimated_count, 0) as estimated_count'),
-                    DB::raw('COALESCE(op.confidence, 0.90) as confidence'),
-                    DB::raw('COALESCE(op.ts, "'.$latestTs.'") as last_sync'),
-                ])
-                ->get();
+            $apRoomsByRoom = ApRoom::all()->groupBy(
+                fn (ApRoom $apRoom) => ApRoomHelper::extractRoomName($apRoom->ap_id, $apRoom->room_id)
+            );
+
+            $predictionsByRoom = OccupancyPrediction::where('ts', $latestTs)
+                ->get()
+                ->groupBy(
+                    fn (OccupancyPrediction $pred) => ApRoomHelper::extractRoomName($pred->ap_id, $pred->room_id)
+                );
+
+            $allRoomNames = $apRoomsByRoom->keys()->merge($predictionsByRoom->keys())->unique();
+
+            $rooms = $allRoomNames->map(function (string $roomName) use ($apRoomsByRoom, $predictionsByRoom, $latestTs) {
+                $roomAps = $apRoomsByRoom->get($roomName, collect());
+                $roomPreds = $predictionsByRoom->get($roomName, collect());
+
+                $apIds = $roomAps->pluck('ap_id')
+                    ->merge($roomPreds->pluck('ap_id'))
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $hasPreds = $roomPreds->isNotEmpty();
+
+                return [
+                    'room_id' => $roomName,
+                    'ap_id' => implode(', ', $apIds),
+                    'ap_ids' => $apIds,
+                    'level' => $hasPreds ? ApRoomHelper::maxLevel($roomPreds->pluck('level')) : 'LOW',
+                    'estimated_count' => $hasPreds ? (int) $roomPreds->sum('estimated_count') : 0,
+                    'confidence' => $hasPreds ? round((float) $roomPreds->avg('confidence'), 2) : 0.90,
+                    'last_sync' => $latestTs,
+                ];
+            })->values();
         }
 
-        // Gunakan Model Alert untuk mengambil alert yang aktif
-        $activeAlerts = Alert::where('status', 'ACTIVE')
-            ->orderBy('triggered_at', 'desc')
-            ->get();
+        $activeAlerts = ApRoomHelper::mergeAlerts(
+            Alert::where('status', 'ACTIVE')
+                ->orderBy('triggered_at', 'desc')
+                ->get()
+        );
 
         return response()->json([
             'success' => true,
@@ -60,36 +81,56 @@ class DashboardController extends Controller
      */
     public function getRoomLiveDetail(string $roomId): JsonResponse
     {
-        // 1. Dapatkan ap_id dari Model ApRoom
-        $apRoom = ApRoom::where('room_id', $roomId)->first();
+        // 1. Dapatkan semua ap_id yang berada di ruangan ini (berdasarkan nama ruangan setelah '-' pada ap_id atau room_id)
+        $matchingAps = ApRoom::all()->filter(
+            fn (ApRoom $ap) => ApRoomHelper::extractRoomName($ap->ap_id, $ap->room_id) === $roomId || $ap->room_id === $roomId
+        );
 
-        if (!$apRoom) {
+        if ($matchingAps->isEmpty()) {
             return response()->json([
                 'success' => false,
                 'message' => "Ruangan {$roomId} tidak ditemukan atau tidak memiliki AP terdaftar.",
             ], 404);
         }
 
-        $apId = $apRoom->ap_id;
+        $apIds = $matchingAps->pluck('ap_id')->unique()->values()->all();
 
-        // 2. Ambil prediksi okupansi terkini via Model OccupancyPrediction
-        $latestPrediction = OccupancyPrediction::where('room_id', $roomId)
-            ->orderBy('ts', 'desc')
-            ->first();
+        // 2. Ambil prediksi okupansi terkini via Model OccupancyPrediction (gabungkan semua AP di ruangan pada ts terbaru)
+        $latestPredTs = OccupancyPrediction::where(function ($query) use ($apIds, $roomId) {
+            $query->whereIn('ap_id', $apIds)
+                ->orWhere('room_id', $roomId);
+        })->max('ts');
 
-        // 3. Ambil data polling klien aktif terkini dari poll_log
-        $latestPoll = DB::table('poll_log')
-            ->where('ap_id', $apId)
-            ->orderBy('ts', 'desc')
-            ->first();
+        $latestPredictions = collect();
+        if ($latestPredTs) {
+            $latestPredictions = OccupancyPrediction::where('ts', $latestPredTs)
+                ->where(function ($query) use ($apIds, $roomId) {
+                    $query->whereIn('ap_id', $apIds)
+                        ->orWhere('room_id', $roomId);
+                })
+                ->get();
+        }
 
-        $activeTs = $latestPoll ? $latestPoll->ts : ($latestPrediction?->ts);
+        // 3. Ambil data polling klien aktif terkini dari poll_log (gabungkan semua AP di ruangan pada ts terbaru)
+        $latestPollTs = DB::table('poll_log')
+            ->whereIn('ap_id', $apIds)
+            ->max('ts');
 
-        // 4. Hitung agregasi trafik dari client_snapshot pada timestamp aktif
+        $latestPollClients = null;
+        if ($latestPollTs) {
+            $latestPollClients = (int) DB::table('poll_log')
+                ->whereIn('ap_id', $apIds)
+                ->where('ts', $latestPollTs)
+                ->sum('n_clients');
+        }
+
+        $activeTs = $latestPollTs ?: ($latestPredTs ? (string) $latestPredTs : null);
+
+        // 4. Hitung agregasi trafik gabungan dari client_snapshot pada timestamp aktif untuk semua AP ruangan ini
         $trafficAgg = null;
         if ($activeTs) {
             $trafficAgg = DB::table('client_snapshot')
-                ->where('ap_id', $apId)
+                ->whereIn('ap_id', $apIds)
                 ->where('ts', $activeTs)
                 ->select([
                     DB::raw('COALESCE(SUM(rx_bytes), 0) as total_rx_bytes'),
@@ -114,12 +155,12 @@ class DashboardController extends Controller
         $rxRateKBs = round($rxBytes / 1024 / $intervalSec, 2);
         $txRateKBs = round($txBytes / 1024 / $intervalSec, 2);
 
-        $rxRateFormatted = $rxRateKBs >= 1024 
-            ? round($rxRateKBs / 1024, 2) . ' MB/s' 
+        $rxRateFormatted = $rxRateKBs >= 1024
+            ? round($rxRateKBs / 1024, 2) . ' MB/s'
             : $rxRateKBs . ' KB/s';
 
-        $txRateFormatted = $txRateKBs >= 1024 
-            ? round($txRateKBs / 1024, 2) . ' MB/s' 
+        $txRateFormatted = $txRateKBs >= 1024
+            ? round($txRateKBs / 1024, 2) . ' MB/s'
             : $txRateKBs . ' KB/s';
 
         // 3: Packets per second (pps)
@@ -129,22 +170,25 @@ class DashboardController extends Controller
         $flowCount = (int) ($trafficAgg->unique_clients ?? 0);
 
         // 5: Active Clients
-        $activeClients = (int) ($latestPoll->n_clients ?? $flowCount);
+        $activeClients = $latestPollClients ?? $flowCount;
 
         // 6: Connection Rate
         $connectionRate = (int) round($flowCount / $intervalSec);
+
+        $hasPreds = $latestPredictions->isNotEmpty();
 
         return response()->json([
             'success' => true,
             'message' => "Detail live ruangan {$roomId} berhasil diambil.",
             'data' => [
                 'room_id' => $roomId,
-                'ap_id' => $apId,
+                'ap_id' => implode(', ', $apIds),
+                'ap_ids' => $apIds,
                 'last_sync' => $activeTs,
-                'level' => $latestPrediction->level ?? 'LOW',
-                'estimated_count' => $latestPrediction->estimated_count ?? $activeClients,
-                'accuracy_percent' => isset($latestPrediction->confidence) 
-                    ? (int) round((float) $latestPrediction->confidence * 100) 
+                'level' => $hasPreds ? ApRoomHelper::maxLevel($latestPredictions->pluck('level')) : 'LOW',
+                'estimated_count' => $hasPreds ? (int) $latestPredictions->sum('estimated_count') : $activeClients,
+                'accuracy_percent' => $hasPreds
+                    ? (int) round((float) $latestPredictions->avg('confidence') * 100)
                     : 90,
                 'metrics' => [
                     'rx_rate' => $rxRateFormatted,

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Support\ApRoomHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -39,11 +39,11 @@ class HistoryController extends Controller
         $baseQuery = DB::table('occupancy_predictions as op')
             ->leftJoin('poll_log as pl', function ($join) {
                 $join->on('op.ap_id', '=', 'pl.ap_id')
-                     ->on('op.ts', '=', 'pl.ts');
+                    ->on('op.ts', '=', 'pl.ts');
             })
             ->leftJoinSub($trafficSub, 'tr', function ($join) {
                 $join->on('op.ap_id', '=', 'tr.ap_id')
-                     ->on('op.ts', '=', 'tr.ts');
+                    ->on('op.ts', '=', 'tr.ts');
             });
 
         // Filter rentang waktu jika ada
@@ -54,10 +54,13 @@ class HistoryController extends Controller
             $baseQuery->where('op.ts', '<=', $validated['end']);
         }
 
-        // KASUS A: Filter Spesifik Ruangan atau AP Tertentu
+        // KASUS A: Filter Spesifik Ruangan atau AP Tertentu (gabungkan AP dengan ruangan sama pada timestamp yang sama)
         if ($roomId || $apId) {
             if ($roomId) {
-                $baseQuery->where('op.room_id', $roomId);
+                $baseQuery->where(function ($query) use ($roomId) {
+                    $query->where('op.ap_id', 'like', '%-' . $roomId)
+                        ->orWhere('op.room_id', $roomId);
+                });
             }
             if ($apId) {
                 $baseQuery->where('op.ap_id', $apId);
@@ -65,33 +68,43 @@ class HistoryController extends Controller
 
             $records = $baseQuery->select([
                 'op.ts',
-                'op.ap_id',
-                'op.room_id',
-                'op.estimated_count',
-                'op.level',
-                'op.confidence',
-                'pl.n_clients',
-                DB::raw('ROUND(COALESCE(tr.rx_rate, 0), 2) as rx_rate'),
-                DB::raw('ROUND(COALESCE(tr.tx_rate, 0), 2) as tx_rate'),
+                DB::raw('GROUP_CONCAT(DISTINCT op.ap_id) as ap_id'),
+                DB::raw('MAX(op.room_id) as room_id'),
+                DB::raw('SUM(op.estimated_count) as estimated_count'),
+                DB::raw("CASE MAX(CASE UPPER(op.level) WHEN 'CROWDED' THEN 4 WHEN 'HIGH' THEN 3 WHEN 'MEDIUM' THEN 2 ELSE 1 END) WHEN 4 THEN 'CROWDED' WHEN 3 THEN 'HIGH' WHEN 2 THEN 'MEDIUM' ELSE 'LOW' END as level"),
+                DB::raw('ROUND(AVG(op.confidence), 2) as confidence'),
+                DB::raw('SUM(COALESCE(pl.n_clients, 0)) as n_clients'),
+                DB::raw('ROUND(SUM(COALESCE(tr.rx_rate, 0)), 2) as rx_rate'),
+                DB::raw('ROUND(SUM(COALESCE(tr.tx_rate, 0)), 2) as tx_rate'),
             ])
-            ->orderBy('op.ts', 'desc')
-            ->limit($limit)
-            ->get();
-        } 
+                ->groupBy('op.ts')
+                ->orderBy('op.ts', 'desc')
+                ->limit($limit)
+                ->get()
+                ->map(function ($row) use ($roomId) {
+                    $apIds = $row->ap_id ? explode(',', (string) $row->ap_id) : [];
+                    $firstApId = $apIds[0] ?? null;
+
+                    $row->ap_id = implode(', ', $apIds);
+                    $row->room_id = $roomId ?: ApRoomHelper::extractRoomName($firstApId, $row->room_id);
+
+                    return $row;
+                });
+        }
         // KASUS B: Opsi "Semua Ruangan" (Akumulasi Total Seluruh Gedung)
         else {
             $records = $baseQuery->select([
                 'op.ts',
                 DB::raw("'ALL' as room_id"),
                 DB::raw('SUM(op.estimated_count) as estimated_count'),
-                DB::raw('SUM(pl.n_clients) as n_clients'),
+                DB::raw('SUM(COALESCE(pl.n_clients, 0)) as n_clients'),
                 DB::raw('ROUND(SUM(COALESCE(tr.rx_rate, 0)), 2) as rx_rate'),
                 DB::raw('ROUND(SUM(COALESCE(tr.tx_rate, 0)), 2) as tx_rate'),
             ])
-            ->groupBy('op.ts')
-            ->orderBy('op.ts', 'desc')
-            ->limit($limit)
-            ->get();
+                ->groupBy('op.ts')
+                ->orderBy('op.ts', 'desc')
+                ->limit($limit)
+                ->get();
         }
 
         return response()->json([

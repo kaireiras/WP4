@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\Alert;
+use App\Support\ApRoomHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AlertController extends Controller
 {
     /**
-     * Mengambil daftar alert terkini.
+     * Mengambil daftar alert terkini (digabungkan untuk AP dalam ruangan yang sama pada waktu yang sama).
      */
     public function index(Request $request): JsonResponse
     {
@@ -24,7 +24,9 @@ class AlertController extends Controller
             $query->where('status', strtoupper($status));
         }
 
-        $alerts = $query->limit(50)->get();
+        $alerts = ApRoomHelper::mergeAlerts($query->get())
+            ->take(50)
+            ->values();
 
         return response()->json([
             'success' => true,
@@ -34,7 +36,7 @@ class AlertController extends Controller
     }
 
     /**
-     * Konfirmasi / Acknowledge alert yang aktif.
+     * Konfirmasi / Acknowledge alert yang aktif (termasuk AP lain di ruangan dan waktu yang sama).
      */
     public function acknowledge(int $id): JsonResponse
     {
@@ -47,10 +49,21 @@ class AlertController extends Controller
             ], 404);
         }
 
-        $alert->update([
+        $roomName = ApRoomHelper::extractRoomName($alert->ap_id, $alert->room_id);
+        $acknowledgedAt = now();
+
+        $matchingIds = Alert::where('triggered_at', $alert->triggered_at)
+            ->get()
+            ->filter(fn (Alert $item) => ApRoomHelper::extractRoomName($item->ap_id, $item->room_id) === $roomName)
+            ->pluck('id')
+            ->all();
+
+        Alert::whereIn('id', $matchingIds)->update([
             'status' => 'ACKNOWLEDGED',
-            'acknowledged_at' => now(),
+            'acknowledged_at' => $acknowledgedAt,
         ]);
+
+        $alert->refresh();
 
         return response()->json([
             'success' => true,
