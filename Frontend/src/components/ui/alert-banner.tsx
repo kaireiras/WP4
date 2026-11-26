@@ -11,7 +11,7 @@ export interface AlertBannerProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function AlertBanner({
   message,
-  crowdedRooms = ['CU205', 'CU207', 'HU206', 'HU207', 'HU209'],
+  crowdedRooms = [],
   onDismiss,
   showDismiss = true,
   className,

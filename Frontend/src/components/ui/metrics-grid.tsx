@@ -25,56 +25,13 @@ export interface MetricsGridProps extends React.HTMLAttributes<HTMLDivElement> {
   onClose?: () => void
 }
 
-export const defaultMetrics: MetricItem[] = [
-  {
-    label: 'RX Rate',
-    value: '1.24',
-    unit: 'MB/s',
-    color: 'blue',
-    trend: [0.42, 0.65, 0.88, 1.05, 1.15, 1.24],
-  },
-  {
-    label: 'TX Rate',
-    value: '486',
-    unit: 'KB/s',
-    color: 'teal',
-    trend: [120, 240, 310, 420, 450, 486],
-  },
-  {
-    label: 'Packets/sec',
-    value: '3,420',
-    unit: 'pps',
-    color: 'purple',
-    trend: [1200, 1850, 2400, 2900, 3150, 3420],
-  },
-  {
-    label: 'Flow Count',
-    value: '1,286',
-    unit: 'flow',
-    color: 'orange',
-    trend: [620, 780, 940, 1100, 1210, 1286],
-  },
-  {
-    label: 'Active Clients',
-    value: '62',
-    unit: 'klien',
-    color: 'rose',
-    trend: [15, 28, 40, 52, 58, 62],
-  },
-  {
-    label: 'Connection Rate',
-    value: '148',
-    unit: '/s',
-    color: 'green',
-    trend: [35, 60, 92, 115, 130, 148],
-  },
-]
+export const defaultMetrics: MetricItem[] = []
 
 export function MetricsGrid({
-  roomName = 'CU205',
-  statusLevel = 'crowded',
+  roomName = '-',
+  statusLevel = 'low',
   isLive = true,
-  updatedAt = 'Diperbarui 12:09:15',
+  updatedAt = '-',
   metrics = defaultMetrics,
   estimatedPeople,
   confidence,

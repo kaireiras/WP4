@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useMemo } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useServerFn } from '@tanstack/react-start'
 import {
   AlertCircle,
@@ -29,7 +29,11 @@ import {
   normalizeOccupancyLevel,
   resolveRoomDisplayLocation,
 } from '#/services/alertService'
-import { getRoomLiveDetail } from '#/services/dashboardService'
+import {
+  classifyOccupancyByClients,
+  getRoomLiveDetail,
+} from '#/services/dashboardService'
+import type { DashboardOverviewResponse } from '#/services/dashboardService'
 import { getHistoryChart } from '#/services/historyService'
 
 export interface RoomDetailDialogProps {
@@ -69,6 +73,7 @@ export function RoomDetailDialog({
   onClose,
   registeredApRoomIds = [],
 }: RoomDetailDialogProps) {
+  const queryClient = useQueryClient()
   const getRoomLiveFn = useServerFn(getRoomLiveDetail)
   const getHistoryChartFn = useServerFn(getHistoryChart)
 
@@ -106,6 +111,59 @@ export function RoomDetailDialog({
 
   const liveResult = roomLiveQuery.data
   const liveData = liveResult?.success ? liveResult.data : null
+
+  const effectiveCount = liveData
+    ? Math.max(
+        Number(liveData.metrics.active_clients || 0),
+        Number(liveData.estimated_count || 0),
+      )
+    : 0
+
+  const effectiveLevel = liveData
+    ? effectiveCount > 0 || liveData.poll_ok === true
+      ? classifyOccupancyByClients(effectiveCount)
+      : liveData.level
+    : 'UNKNOWN'
+
+  useEffect(() => {
+    if (!liveData || !roomId) return
+
+    queryClient.setQueryData<DashboardOverviewResponse>(
+      ['dashboard-overview'],
+      (prev) => {
+        if (!prev) return prev
+        const targetKey = roomId.trim().toUpperCase()
+
+        const nextRooms = prev.data.rooms.map((room) => {
+          if (room.room_id.trim().toUpperCase() !== targetKey) return room
+          if (
+            room.level === effectiveLevel &&
+            room.estimated_count === effectiveCount
+          ) {
+            return room
+          }
+          return {
+            ...room,
+            level: effectiveLevel,
+            estimated_count: effectiveCount,
+            last_sync: liveData.last_sync ?? room.last_sync,
+          }
+        })
+
+        const hasChanged = nextRooms.some(
+          (room, idx) => room !== prev.data.rooms[idx],
+        )
+        if (!hasChanged) return prev
+        return {
+          ...prev,
+          data: {
+            ...prev.data,
+            rooms: nextRooms,
+          },
+        }
+      },
+    )
+  }, [liveData, roomId, effectiveLevel, effectiveCount, queryClient])
 
   const metrics = useMemo<Array<MetricItem>>(() => {
     if (!liveData) return []
@@ -384,7 +442,7 @@ export function RoomDetailDialog({
             /* Live Metrics Grid */
             <MetricsGrid
               roomName={liveData.room_id}
-              statusLevel={normalizeOccupancyLevel(liveData.level)}
+              statusLevel={normalizeOccupancyLevel(effectiveLevel)}
               confidence={
                 liveData.accuracy_percent !== undefined
                   ? `${liveData.accuracy_percent}%`
