@@ -135,4 +135,31 @@ class HistoryGrafikTest extends TestCase
             ->assertJsonPath('data.0.ts', '2026-11-26 00:00:00')
             ->assertJsonPath('data.0.active_clients', 15);
     }
+
+    public function test_grafik_merges_multiple_aps_in_same_room_at_same_timestamp(): void
+    {
+        DB::table('vap_snapshot')->insert([
+            'ts' => '2026-11-26 08:00:00',
+            'ap_id' => 'AP2-CU205',
+            'vap_up' => 1,
+            'n_clients' => 12,
+            'rx_bytes' => 15360, // 1 KB/s over 15s
+            'tx_bytes' => 30720, // 2 KB/s over 15s
+            'rx_packets' => 15,
+            'tx_packets' => 30,
+            'tx_retries' => 1,
+        ]);
+
+        $response = $this->getJson('/api/v1/grafik?room_id=CU205&range=1h');
+
+        $response->assertOk()
+            ->assertJsonPath('filter.interval', '15s')
+            ->assertJsonPath('total_pts', 4)
+            ->assertJsonPath('data.0.ts', '2026-11-26 08:00:00')
+            ->assertJsonPath('data.0.room_id', 'CU205')
+            ->assertJsonPath('data.0.active_clients', 22)
+            ->assertJsonPath('data.0.rx_rate_kbs', 2)
+            ->assertJsonPath('data.0.tx_rate_kbs', 4)
+            ->assertJsonPath('data.0.tx_retries', 1);
+    }
 }
